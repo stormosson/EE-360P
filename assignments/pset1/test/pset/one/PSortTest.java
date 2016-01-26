@@ -66,8 +66,8 @@ public class PSortTest {
         /*     System.out.println( */
         /*         "Great, your sorting algorithm works for this test case"); */
         /* } */
-        System.out.println(
-            "=========================================================");
+        /* System.out.println( */
+        /*     "========================================================="); */
     }
 
     /**
