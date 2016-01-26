@@ -31,6 +31,12 @@ public class PSortTest {
 
         int[] A3 = {13, 59, 24, 18, 33, 20, 11, 11, 13, 50, 10999, 97};
         verifyParallelSort(A3);
+
+        int[] A4 = {-13, 59, 24, 18, 0, 33, 20, 11, -1, 13, 50, 10999, 97};
+        verifyParallelSort(A4);
+
+        int[] A5 = {-13, -59, -24, -18, -33, -11, -11, -13, -50, -10999, -97};
+        verifyParallelSort(A5);
     }
 
     /**
@@ -41,9 +47,6 @@ public class PSortTest {
     void verifyParallelSort(int[] A) {
         int[] B = new int[A.length];
         System.arraycopy(A, 0, B, 0, A.length);
-
-        /* System.out.println("Verify Parallel Sort for array: "); */
-        /* printArray(A); */
 
         Arrays.sort(A);
         PSort.parallelSort(B, 0, B.length);
@@ -62,13 +65,6 @@ public class PSortTest {
             }
             /* assertEquals(A[i], B[i]); */
         }
-
-        /* if (isSuccess) { */
-        /*     System.out.println( */
-        /*         "Great, your sorting algorithm works for this test case"); */
-        /* } */
-        /* System.out.println( */
-        /*     "========================================================="); */
     }
 
     /**

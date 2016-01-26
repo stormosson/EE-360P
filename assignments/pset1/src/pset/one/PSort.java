@@ -60,7 +60,7 @@ public class PSort implements Runnable {
     public void run() {
         try {
             System.out.println("Sorting A over " + begin + " to " + end);
-            if (this.begin < this.end) {
+            if (this.begin <= this.end) {
                 return;
             }
             int pivot = this.partition();
