@@ -60,6 +60,7 @@ public class PSortTest {
                 isSuccess = false;
                 break;
             }
+            /* assertEquals(A[i], B[i]); */
         }
 
         /* if (isSuccess) { */
