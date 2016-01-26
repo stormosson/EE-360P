@@ -20,7 +20,6 @@ public class PSort implements Runnable {
      */
     public static void parallelSort(int[] A, int begin, int end) {
         int pivot = begin;
-        Arrays.sort(A);
     }
 
     @Override
