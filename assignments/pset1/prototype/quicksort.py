@@ -6,7 +6,7 @@ def partition(lst, start, end):
                                           # simply run for empty range
 
     for i in range(start, end):           # i must be between start and end-1
-        if lst[i] < lst[end]:             # in your version it always goes from 0
+        if lst[i] < lst[end]:
             lst[i],lst[pos] = lst[pos],lst[i]
             pos += 1
 

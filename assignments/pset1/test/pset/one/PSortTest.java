@@ -2,6 +2,8 @@ package pset.one;
 
 import java.util.Arrays;
 
+import static org.junit.Assert.*;
+
 import org.junit.Test;
 import pset.one.PSort;
 
@@ -60,7 +62,7 @@ public class PSortTest {
                 isSuccess = false;
                 break;
             }
-            /* assertEquals(A[i], B[i]); */
+            assertEquals(A[i], B[i]);
         }
     }
 
