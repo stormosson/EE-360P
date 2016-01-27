@@ -19,7 +19,7 @@ define 'assignments', :layout => ass_layout do
   manifest['Copyright'] = 'Stormosson (C) 2016'
 
   #--- Build settings
-  compile.options.target = JAVA_TARGET
+  # compile.options.target = JAVA_TARGET
 
   #--- Project settings
   define 'pset1'
