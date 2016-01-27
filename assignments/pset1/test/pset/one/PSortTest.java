@@ -1,12 +1,8 @@
+package pset.one;
+
 import java.util.Arrays;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
-
 import pset.one.PSort;
 
 /**
@@ -48,7 +44,8 @@ public class PSortTest {
         Arrays.sort(A);
         PSort.parallelSort(B, 0, B.length);
 
-        boolean isSuccess = true;
+        @SuppressWarnings("unused")
+		boolean isSuccess = true;
         for (int i = 0; i < A.length; i++) {
             if (A[i] != B[i]) {
                 System.out.println(
