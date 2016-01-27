@@ -3,9 +3,9 @@ package pset.one;
 import java.util.Arrays;
 
 import org.junit.Test;
-import pset.one.PSearch;
-
 import static org.junit.Assert.*;
+
+import pset.one.PSearch;
 
 /**
  * @author      Eric Crosson <eric.s.crosson@utexas.edu>
