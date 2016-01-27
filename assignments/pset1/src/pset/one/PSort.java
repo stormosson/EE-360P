@@ -1,5 +1,7 @@
 package pset.one;
 
+import java.util.Arrays;
+
 /**
  * @author      Eric Crosson <eric.s.crosson@utexas.edu>
  * @author      William "Stormy" Mauldin <stormymauldin@utexas.edu>
@@ -7,14 +9,22 @@ package pset.one;
  * @since       2016-01-26
  */
 
-import java.util.Arrays;
-
 public class PSort implements Runnable {
 
+    /** Array of ints to sort. */
     int[] A;
+    /** Beginning index of range of A to sort. */
     int begin;
+    /**End index of range of A to sort. */
     int end;
 
+    /**
+     * Construct a Parallel Sort object.
+     *
+     * @param A Array to sort
+     * @param begin Starting index of range to sort
+     * @param end End index of range to sort
+     */
     public PSort(int[] A, int begin, int end) {
         this.A = A;
         this.begin = begin;
@@ -38,17 +48,20 @@ public class PSort implements Runnable {
         }
     }
 
-    /* TODO: document */
+    /**
+     * Partition A into two sections: the elements less than a chosen pivot and
+     * the elements greater than said pivot.
+     */
     public int partition() {
 
-    	int temp;
+        int temp;
         int pivot = this.begin;
 
         for (int i = this.begin; i < this.end; ++i) {
             if (A[i] < A[end]) {
-            	temp = A[i];
-            	A[i] = A[pivot];
-            	A[pivot] = temp;
+                temp = A[i];
+                A[i] = A[pivot];
+                A[pivot] = temp;
                 ++pivot;
             }
         }
@@ -59,10 +72,12 @@ public class PSort implements Runnable {
         return pivot;
     }
 
-    /* TODO: document */
+    /**
+     * Sort array A from begin to end.
+     */
     @Override
     public void run() {
-    	try{
+        try{
             if (this.begin >= this.end) {
                 return;
             }
