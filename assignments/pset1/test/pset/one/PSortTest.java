@@ -38,7 +38,7 @@ public class PSortTest {
     }
 
     /**
-     * Verify parallelSort's ability to sorty array A.
+     * Verify parallelSort's ability to sort array A.
      *
      * @param  A The test array to verify
      */

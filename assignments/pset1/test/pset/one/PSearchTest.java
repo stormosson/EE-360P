@@ -12,10 +12,11 @@ import pset.one.PSearch;
  * @since       2016-01-26
  */
 
-/* TODO: document */
-
 public class PSearchTest {
 
+    /**
+     * Test parallelSearch under a variety of Arrays.
+     */
     @Test
     public void testParallelSearch() {
 
@@ -35,6 +36,11 @@ public class PSearchTest {
         verifyParallelSearch(x3, A3, numThread3);
     }
 
+    /**
+     * Verify parallelSearch's ability to search array A.
+     *
+     * @param  A The test array to verify
+     */
     static void verifyParallelSearch(int x, int[] A, int numThread) {
 
         int idx = -1;
@@ -52,9 +58,13 @@ public class PSearchTest {
             System.out.println("Expect: " + idx);
             System.out.println("Your results: " + pIdx);
         }
-        /* TODO: add assert */
     }
 
+    /**
+     * Print int array A to System.out.
+     *
+     * @param  A The int array to display
+     */
     public static void printArray(int[] A) {
         for (int i = 0; i < A.length; i++) {
             System.out.print(A[i] + ((i != A.length - 1) ? " " : ""));
