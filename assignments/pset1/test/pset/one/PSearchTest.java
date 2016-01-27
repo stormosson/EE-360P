@@ -12,6 +12,7 @@ import pset.one.PSearch;
  * @since       2016-01-26
  */
 
+/* TODO: document */
 
 public class PSearchTest {
 
@@ -51,6 +52,7 @@ public class PSearchTest {
             System.out.println("Expect: " + idx);
             System.out.println("Your results: " + pIdx);
         }
+        /* TODO: add assert */
     }
 
     public static void printArray(int[] A) {
