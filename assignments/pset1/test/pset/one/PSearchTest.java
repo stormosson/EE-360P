@@ -59,11 +59,7 @@ public class PSearchTest {
 
     public static void printArray(int[] A) {
         for (int i = 0; i < A.length; i++) {
-            if (i != A.length - 1) {
-                System.out.print(A[i] + " ");
-            } else {
-                System.out.print(A[i]);
-            }
+            System.out.print(A[i] + ((i != A.length - 1) ? " " : ""));
         }
         System.out.println();
     }
