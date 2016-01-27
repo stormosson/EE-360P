@@ -5,6 +5,8 @@ import java.util.Arrays;
 import org.junit.Test;
 import pset.one.PSearch;
 
+import static org.junit.Assert.*;
+
 /**
  * @author      Eric Crosson <eric.s.crosson@utexas.edu>
  * @author      William "Stormy" Mauldin <stormymauldin@utexas.edu>
@@ -52,7 +54,7 @@ public class PSearchTest {
             System.out.println("Expect: " + idx);
             System.out.println("Your results: " + pIdx);
         }
-        /* TODO: add assert */
+        assertEquals(pIdx, idx);
     }
 
     public static void printArray(int[] A) {
