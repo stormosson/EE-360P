@@ -3,7 +3,7 @@ package pset.one;
 import java.util.Arrays;
 
 import org.junit.Test;
-import pset.one.PSort;
+import pset.one.PSearch;
 
 /**
  * @author      Eric Crosson <eric.s.crosson@utexas.edu>
