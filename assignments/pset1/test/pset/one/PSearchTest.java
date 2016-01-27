@@ -36,9 +36,6 @@ public class PSearchTest {
 
     static void verifyParallelSearch(int x, int[] A, int numThread) {
 
-        System.out.print("Verify Parallel Search for x: " + x + " in array: ");
-        printArray(A);
-
         int idx = -1;
         for (int i = 0; i < A.length; i++) {
             if (A[i] == x) {
@@ -53,12 +50,7 @@ public class PSearchTest {
             System.out.println("Your parallel search algorithm is not correct");
             System.out.println("Expect: " + idx);
             System.out.println("Your results: " + pIdx);
-        } else {
-            System.out.println(
-                "Great, your search algorithm works for this test case");
         }
-        System.out.println(
-            "=========================================================");
     }
 
     public static void printArray(int[] A) {
