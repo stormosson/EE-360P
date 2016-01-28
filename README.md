@@ -1,11 +1,8 @@
-#+Author: Eric Crosson
-#+Date: 2016-01-21
-#+Startup: content
-* EE-360P
+# EE-360P [![Travis CI](https://travis-ci.org/stormosson/EE-360P.svg?branch=master)](https://travis-ci.org/stormosson/EE-360P.svg?branch=master)
 
 Contains the source code used in EE 360P.
 
-** Credits
+## Credits
 
 Professor Vijay Garg (@vijaygarg1) of the University of Texas created the original repo.
 
