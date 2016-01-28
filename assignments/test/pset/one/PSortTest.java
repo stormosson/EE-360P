@@ -8,8 +8,8 @@ import org.junit.Test;
 import pset.one.PSort;
 
 /**
- * @author      Eric Crosson <eric.s.crosson@utexas.edu>
- * @author      William "Stormy" Mauldin <stormymauldin@utexas.edu>
+ * @author      Eric Crosson {@literal <eric.s.crosson@utexas.edu>}
+ * @author      William "Stormy" Mauldin {@literal <stormymauldin@utexas.edu>}
  * @version     0.1
  * @since       2016-01-26
  */
@@ -49,8 +49,8 @@ public class PSortTest {
         Arrays.sort(A);
         PSort.parallelSort(B, 0, B.length);
 
-        @SuppressWarnings("unused")
-		boolean isSuccess = true;
+    @SuppressWarnings("unused")
+    boolean isSuccess = true;
         for (int i = 0; i < A.length; i++) {
             if (A[i] != B[i]) {
                 System.out.println(

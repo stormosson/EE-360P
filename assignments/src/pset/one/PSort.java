@@ -3,8 +3,8 @@ package pset.one;
 import java.util.Arrays;
 
 /**
- * @author      Eric Crosson <eric.s.crosson@utexas.edu>
- * @author      William "Stormy" Mauldin <stormymauldin@utexas.edu>
+ * @author      Eric Crosson {@literal <eric.s.crosson@utexas.edu>}
+ * @author      William "Stormy" Mauldin {@literal <stormymauldin@utexas.edu>}
  * @version     0.1
  * @since       2016-01-26
  */
@@ -51,6 +51,9 @@ public class PSort implements Runnable {
     /**
      * Partition A into two sections: the elements less than a chosen pivot and
      * the elements greater than said pivot.
+     *
+     * @return The index (after sorting to the correct position in this.A) of
+     * the chosen pivot.
      */
     public int partition() {
 
