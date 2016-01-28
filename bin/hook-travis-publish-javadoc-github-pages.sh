@@ -14,7 +14,7 @@ fi
 cd $HOME
 git config --global user.email "travis@travis-ci.org"
 git config --global user.name "travis-ci"
-git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/stormosson/EE-360P $HOME/gh-pages
+git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/stormosson/stormosson.github.io $HOME/gh-pages
 
 # Commit and push changes
 cd $HOME/gh-pages
