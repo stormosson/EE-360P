@@ -9,7 +9,7 @@ before_script:
 script:
   - buildr
 after_success:
-   "find assignments/src -type f -name '*.java' | xargs javadoc -d $HOME/javadoc-latest"
+  - "find assignments/src -type f -name '*.java' | xargs javadoc -d $HOME/javadoc-latest"
   - bin/hook-travis-publish-javadoc-github-pages.sh
 
 env:
