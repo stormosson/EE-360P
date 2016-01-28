@@ -2,6 +2,10 @@
 
 Contains the source code used in EE 360P.
 
+## Online Documentation
+
+Javadoc html is kept [up to date](https://travis-ci.org/stormosson/EE-360P.svg?branch=master) thanks to Travis-CI.
+
 ## Credits
 
 Professor Vijay Garg (@vijaygarg1) of the University of Texas created the original repo.
