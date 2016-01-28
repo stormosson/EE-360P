@@ -19,7 +19,7 @@ git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/stormosson/st
 # Commit and push changes
 cd $HOME/gh-pages
 git rm -rf *
-cp -Rf $HOME/javadoc-latest ./
+cp -Rf $HOME/javadoc-latest/* ./
 git add -f .
 git commit -m "Latest javadoc on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages"
 git push -fq origin gh-pages > /dev/null
