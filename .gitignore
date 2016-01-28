@@ -16,3 +16,7 @@
 *.launch
 */.metadata/
 assignments/pset1/reports
+*.html
+*.js
+*.css
+/javadoc-latest/package-list

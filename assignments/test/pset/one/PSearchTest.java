@@ -8,8 +8,8 @@ import static org.junit.Assert.*;
 import pset.one.PSearch;
 
 /**
- * @author      Eric Crosson <eric.s.crosson@utexas.edu>
- * @author      William "Stormy" Mauldin <stormymauldin@utexas.edu>
+ * @author      Eric Crosson {@literal <eric.s.crosson@utexas.edu>}
+ * @author      William "Stormy" Mauldin {@literal <stormymauldin@utexas.edu>}
  * @version     0.1
  * @since       2016-01-26
  */
