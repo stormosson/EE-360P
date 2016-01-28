@@ -14,10 +14,10 @@ fi
 cd $HOME
 git config --global user.email "travis@travis-ci.org"
 git config --global user.name "travis-ci"
-git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/stormosson/EE-360P gh-pages > /dev/null
+git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/stormosson/EE-360P $HOME/gh-pages
 
 # Commit and push changes
-cd gh-pages
+cd $HOME/gh-pages
 git rm -rf ./javadoc
 cp -Rf $HOME/javadoc-latest ./javadoc
 git add -f .
