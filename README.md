@@ -1,13 +1,13 @@
 # EE-360P [![Travis CI](https://travis-ci.org/stormosson/EE-360P.svg?branch=master)](https://travis-ci.org/stormosson/EE-360P)
 
-Contains the source code used in EE 360P.
+Contains the source code used in [EE 360P](http://www.ece.utexas.edu/undergraduate/courses/360p).
 
 ## Online Documentation
 
-Javadoc html is kept [up to date](http://stormosson.github.io/) thanks to Travis-CI.
+The [online Javadoc](http://stormosson.github.io) html is kept up to date thanks to [Travis-CI](https://travis-ci.org).
 
 ## Credits
 
-Professor Vijay Garg (@vijaygarg1) of the University of Texas created the original repo.
+Professor [Vijay Garg](https://github.com/vijaygarg1) of the [University of Texas](http://www.ece.utexas.edu) created the original repo.
 
-Students Eric Crosson and William "Stormy" Mauldin forked Garg's repo to complete the course work during the Spring semester of 2016.
+Students [Eric Crosson](https://github.com/ericcrosson) and [William "Stormy" Mauldin](https://github.com/stormymauldin) forked Garg's repo to complete course work during the Spring semester of 2016.
