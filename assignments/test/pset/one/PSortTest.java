@@ -49,8 +49,8 @@ public class PSortTest {
         Arrays.sort(A);
         PSort.parallelSort(B, 0, B.length);
 
-        @SuppressWarnings("unused")
-		boolean isSuccess = true;
+    @SuppressWarnings("unused")
+    boolean isSuccess = true;
         for (int i = 0; i < A.length; i++) {
             if (A[i] != B[i]) {
                 System.out.println(

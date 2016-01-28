@@ -1,0 +1,15 @@
+language: java
+jdk:
+  - oraclejdk8
+
+bundler_args: "--without eclipse"
+before_script:
+  - bundle install
+script:
+  - buildr
+after_success:
+  - bin/hook-travis-publish-javadoc-github-pages.sh
+
+env:
+  global:
+    secure: KQpqZKvYktdfSqVcraFp8cyX3ZQTCpvFpVl/Ees13n+2xMBSRHkubjGhUaUeCV9svXvXuAcl1YnJERRDbWnygm+8HXJLD3slB1BBm18Qd9NRuGV8Q7e/wABdhx3sTP31fPuBnTJVLouoZd9WC34SBmiYUCMoLpnx9mA0LfDeVoIgWAiqXqPTiJkxYcJMq1PADBp8lIWjk9A9dKbqqJhKmwc+wymBQ9x/CIaG03trBUnpgTP9TpU79m/XHv3iNcKRa1uWsnBAy8XRmlLY9xheHU2cGvt9wZjOGuASX317ayBNpuYL7S+GjEJhLUuy9BlMzQlLyZnR0APP/Vjjku/8tyozQ8Y5rVZXEB0N07q3LCsPZ2qTX74Cd2e3RU4BSORDAiXmtfEXkz9fMAA7Q+VET2RLx70UDpmX9ucwQfuFWiCy09bhj4Ms3YLBwD0kM6mseRJWcVIWFJ4dwgXgRdzuxnkkTmWnY+ykwFX6DubwY8vMMgoeAyZJkjHRaSIUBjHT9+3n/JuEnCal1/D4heTJwQ7KQxlK/Jehj4otH6aYx+cpMuknRJcckn7fWsw7YSu5PdEY0h3oe90sNdVVTksa7RE9EyMgAR+8NGAEsqHm3VYN+WAJr9a4wq6qdJhMF0Yko4VoUm+250JYsRg+huzI+qQRmJOckX/NUEjo0FXoUxY=
