@@ -1,4 +1,4 @@
-# EE-360P [![Travis CI](https://travis-ci.org/stormosson/EE-360P.svg?branch=master)](https://travis-ci.org/stormosson/EE-360P.svg?branch=master)
+# EE-360P [![Travis CI](https://travis-ci.org/stormosson/EE-360P.svg?branch=master)](https://travis-ci.org/stormosson/EE-360P)
 
 Contains the source code used in EE 360P.
 
