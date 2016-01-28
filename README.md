@@ -4,7 +4,7 @@ Contains the source code used in EE 360P.
 
 ## Online Documentation
 
-Javadoc html is kept [up to date](https://travis-ci.org/stormosson/EE-360P.svg?branch=master) thanks to Travis-CI.
+Javadoc html is kept [up to date](http://stormosson.github.io/) thanks to Travis-CI.
 
 ## Credits
 
