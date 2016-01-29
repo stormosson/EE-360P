@@ -19,4 +19,6 @@ ratings:
   paths:
   - Gemfile.lock
   - "**.java"
-exclude_paths: []
+exclude_paths:
+  - homework-template
+  - assignments/doc
