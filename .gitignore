@@ -12,7 +12,6 @@
 *.project
 */build/
 */target/
-*.lock
 *.launch
 */.metadata/
 assignments/pset1/reports
