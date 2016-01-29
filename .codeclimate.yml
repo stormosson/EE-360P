@@ -1,0 +1,22 @@
+---
+engines:
+  bundler-audit:
+    enabled: true
+  #csslint:
+    #enabled: true
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - java
+  #eslint:
+    #enabled: true
+  fixme:
+    enabled: true
+  radon:
+    enabled: true
+ratings:
+  paths:
+  - Gemfile.lock
+  - "**.java"
+exclude_paths: []
