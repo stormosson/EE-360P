@@ -19,3 +19,6 @@ assignments/pset1/reports
 *.js
 *.css
 /javadoc-latest/package-list
+.csslintrc
+.eslintignore
+.eslintrc
