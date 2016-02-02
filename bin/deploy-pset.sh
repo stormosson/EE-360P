@@ -22,3 +22,5 @@ rm ${zipfile}
 
 
 zip ${zipfile} ${tmpsource}/*.java
+
+rm -rf ${tmpsource}
