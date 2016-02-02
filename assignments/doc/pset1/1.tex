@@ -62,7 +62,7 @@
 \title{EE 360P:\@Concurrent and Distributed Systems \\ Assignment 1}
 \author{Student: Eric Crosson (email: eric.s.crosson@utexas.edu)\\
   Student: William ``Stormy'' Mauldin (email: stormymauldin@utexas.edu)}
-\date{Thursday January 21, 2016}
+\date{Tuesday, February 2, 2016}
 \maketitle
 
 This homework contains a programming part (Q1-Q2) and a theory part (Q3-Q6). The
@@ -110,24 +110,24 @@ source code as [EID1 EID2].zip. \\
   you can assume that every element of the array is unique.
 
 \item \textbf{(15 points)} Show that any of the following modifications to
-  Peterson’s algorithm makes it incorrect:
+  Peterson's algorithm makes it incorrect:
   \begin{enumerate}[a)]
-  \item A process in Peterson’s algorithm sets the \emph{turn} variable to
+  \item A process in Peterson's algorithm sets the \emph{turn} variable to
     itself instead of setting it to the other process.
     \begin{proof}
-    	\todo
+    Assume two processes exist, \texttt{Process i} and \texttt{Process j}. Assume both \texttt{Process i} and \texttt{Process j} set their respective  \texttt{wantCS} bits to true, followed by \texttt{Process i} setting \texttt{turn = i} and completing the entire conditional check (\texttt{wantCS[j] == true \&\& turn == j}), consecutively. Since \texttt{turn == i} at this stage, \texttt{Process i} enters the critical section. Before \texttt{Process i} exits the critical section, assume that \texttt{Process j} sets \texttt{turn = j} and evalutates the conditional checks (\texttt{wantCS[i] == true \&\& turn == i}). Since \texttt{turn == j} now, \texttt{Process j} enters the critical section at the same time as \texttt{Process i}, thus violating the principle of mututal exclusion.
     \end{proof}
   \item A process sets the \emph{turn} variable before setting the \emph{wantCS}
     variable.
         \begin{proof}
-    	\todo
+    	Assume two processes exist, \texttt{Process i} and \texttt{Process j}. Assume \texttt{Process i} sets \texttt{turn = j} and then \texttt{Process j} immediately modifies it so that \texttt{turn = i}. Next, let \texttt{Process j} set \texttt{wantCS[j] = true} and then begin evaluating the first part of the conditional (\texttt{wantCS[i] == true}). Since \texttt{Process i} has not modified its \texttt{wantCS} bit at this point, the statement will evaluate to \texttt{false} and \texttt{Process j} will enter the critical section. Now assume that \texttt{Process i} finally sets \texttt{wantCS[i] = true} so that \texttt{wantCS[i] == true \&\& turn == i}. \texttt{Process i} is now able to enter the critical section at the same time as \texttt{Process j}, violating the principle of mututal exclusion.
     \end{proof}
   \end{enumerate}
 
 \item \textbf{(15 points)} Show that the bakery algorithm does not work in the
   absence of \emph{choosing} variables.
   	\begin{proof}
-		Assume two threads exist, \texttt{Thread i} of lower priority than \texttt{Thread j}. Assume \texttt{Thread i} is in \emph{choosing} phase, and that \texttt{Thread j} enters the \emph{choosing} phase before \texttt{Thread i} exits. Without a \emph{choosing} variable, \texttt{Thread j} cannot differentiate between \texttt{Thread i} choosing a number and \texttt{Thread i} not requesting a critical section. As such, \texttt{Thread j} is able to scan past \texttt{Thread i}'s index in \emph{numbers} and therefore both threads arrive at the same Baker's number.
+		Assume two threads exist, \texttt{Thread i} of lower priority than \texttt{Thread j}. Assume \texttt{Thread i} is in the \emph{choosing} phase, and that \texttt{Thread j} enters the \emph{choosing} phase before \texttt{Thread i} exits. Without a \emph{choosing} variable, \texttt{Thread j} cannot differentiate between \texttt{Thread i} choosing a number and \texttt{Thread i} not requesting a critical section. As such, \texttt{Thread j} is able to scan past \texttt{Thread i}'s index in \emph{numbers}, allowing both threads arrive at the same Baker's number.
 		
 		Assume \texttt{Thread i} enters the critical section. Since \texttt{Thread j} is of higher priority than \texttt{Thread i} (i.e. $j < i$ in line 28 of Figure~2.7 of the textbook), \texttt{Thread j} also enters the critical section, breaking the principle of mutual exclusion.
 	\end{proof}
@@ -145,6 +145,14 @@ source code as [EID1 EID2].zip. \\
   to \texttt{turn0}.
   
 \lstinputlisting[language=Java]{src/peterson.java}
+In this updated algorithm, we have two variables, \texttt{turn0} and \texttt{turn1}. The variable \texttt{turn0} indicates that it is \texttt{Thread 0}'s turn to enter the critical section, while the variable \texttt{turn1} indicates that it is \texttt{Thread 1}'s turn. \texttt{Thread 0} and \texttt{Thread 1} modify only \texttt{turn0} and \texttt{turn1} respectively. As was the case with the previous algorithm, a thread first indicates that it wishes to enter the critical section by setting its \emph{choosing} variable in the \texttt{wantCS} array.  Next, each of the two threads sets its respective turn variable to 1, indicating it is its turn to enter the critical section. The conditional statement for each of the two threads varies as such:
+\begin{itemize}
+\item \texttt{Thread 0} checks to see if: \texttt{Thread 1} wishes to enter the critical section AND it \texttt{Thread 1}'s turn. If so, then it will wait. Otherwise, \texttt{Thread 0} will enter the critical section. 
+\item \texttt{Thread 1} checks to see if: \texttt{Thread 0} elected to enter the critical section, it is \texttt{Thread 0}'s turn, AND it is \texttt{Thread 1}'s turn. This effectively makes \texttt{Thread 1} wait until \texttt{Thread 0} has left the critical section, thus satisfying the principle of mutual exclusion.
+\end{itemize}
+The principle of starvation-feeding is satisfied because as soon as \texttt{Thread 0} exits the critical section (which we assume happens provided no exceptions), \texttt{Thread 1}'s conditional statement will evaluate to \texttt{false}, thus allowing it to enter the critical section.  
+
+The principle of progress is satisfied because, provided that the other thread is not in the critical section, either thread can enter without waiting on the other.
 
 \item \textbf{(0 points)} You are one of the recently arrested prisoners. The
   warden, a deranged computer scientist, makes the following announcement:
