@@ -6,6 +6,7 @@
 *.out
 *.pdf
 *.class
+build/
 *.synctex.gz
 *.settings/
 *.classpath
