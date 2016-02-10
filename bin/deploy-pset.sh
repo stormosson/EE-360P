@@ -9,19 +9,21 @@ source=../assignments/src/pset/${target_pset}
 tmpsource=/tmp/ee360p-deploy
 rm -rf ${tmpsource}
 mkdir -p ${tmpsource}
-for i in ${source}/**/*.java; do
+for i in ${source}/**/*.java ${source}/*.java; do
     # Ignore files decompiled from the course administrators
+    [[ ! -e $i ]] && continue
     [[ $(grep "\* Decompiled" ${i}) ]] && continue
     sed '/^package*/d' ${i} > ${tmpsource}/$(basename ${i})
 done
 
 
-destination=../deploy
+destination=$(dirname $(readlink -e $0))/../deploy
 zipfile=${destination}/${target_pset}.zip
 mkdir -p ${destination}
 rm ${zipfile}
 
 
-zip ${zipfile} ${tmpsource}/*.java
+cd ${tmpsource}
+zip ${zipfile} *.java
 
 rm -rf ${tmpsource}
