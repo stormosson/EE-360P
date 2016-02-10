@@ -1,6 +1,8 @@
 *~
 .*~
 *.el
+.metadata/
+.recommenders/
 *.aux
 *.log
 *.out
