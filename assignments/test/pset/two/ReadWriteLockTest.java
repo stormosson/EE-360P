@@ -13,14 +13,19 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
 import pset.two.Writer;
 import pset.two.ReaderWriter;
 import pset.two.Reader;
 
+import static org.junit.Assert.*;
+import org.junit.Test;
+
 public class ReadWriteLockTest {
     private static final int THREAD_SIZE = 16;
 
-    public static void main(String[] arrstring) {
+    @Test
+    public void test0() {
         int n;
         StringBuffer stringBuffer = new StringBuffer();
         ReadWriteLock readWriteLock = new ReadWriteLock();
