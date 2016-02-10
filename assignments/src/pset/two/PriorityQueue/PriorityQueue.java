@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 /**
  * @author Eric Crosson {@literal <eric.s.crosson@utexas.edu>}
@@ -46,29 +48,59 @@ public class PriorityQueue {
      * @return -1 if not placed
      */
     public int add(String name, int priority) {
+
+        lock.lock();
         try {
-            readWriteLock.beginWrite();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-        int i = 0;
-        ListIterator<Node> iterator = linkedList.listIterator();
-        while (iterator.hasNext()) {
-            Node n = iterator.next();
-            if (n.priority < priority) {
-                break;
+            while (currentSize == maxSize) {
+                try {
+                    notFull.await();
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
-            ++i;
-        }
 
-        Node curNode = new Node();
-        curNode.priority = priority;
-        curNode.name = name;
-        linkedList.add(i, curNode);
-        ++currentSize;
-        readWriteLock.endWrite();
-        return i;
+            /* keepLooking signifies we have not yet found the index to insert
+             * the new node (i). When we do find it, we stop incrementing i but
+             * continue iterating because we still need to ensure we are not
+             * about to add a duplicate name. */
+            boolean keepLooking = true;
+            int i = 0;
+
+            ListIterator<Node> iterator = linkedList.listIterator();
+            while (iterator.hasNext()) {
+                Node n = iterator.next();
+                if (name.equals(n.name)) {
+                    i = -1;
+                    break;
+                }
+                if (n.priority < priority) {
+                    keepLooking = false;
+                }
+                if (keepLooking) {
+                    ++i;
+                }
+            }
+
+            /* If we are a new name, add to the list and update currentSize and
+             * other threads */
+            if (i != -1) {
+                Node curNode = new Node();
+                curNode.priority = priority;
+                curNode.name = name;
+
+                linkedList.add(i, curNode);
+                ++currentSize;
+                notEmpty.signal();
+            }
+
+            System.out.println("After add: ");
+            printList();
+
+            return i;
+
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -79,27 +111,30 @@ public class PriorityQueue {
      * @return -1 if Node with specified name not found
      */
     public int search(String name) {
+
+        lock.lock();
+        System.out.println("Searching for " + name + " in ");
+        printList();
         try {
-            readWriteLock.beginRead();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        int i = 0;
-        boolean found = false;
-        for (Node n : linkedList) {
-            if (n.name.equals(name)) {
-                found = true;
-                break;
+            int i = 0;
+            boolean found = false;
+            for (Node n : linkedList) {
+                if (name.equals(n.name)) {
+                    found = true;
+                    break;
+                }
+                ++i;
             }
-            ++i;
-        }
 
-        if (!found) {
-            i = -1;
-        }
-        readWriteLock.endRead();
-        return i;
+            if (!found) {
+                i = -1;
+            }
 
+            return i;
+
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -109,23 +144,25 @@ public class PriorityQueue {
      * @return name of the node with the highest priority
      */
     public String poll() {
-        while (true) {
-            try {
-                readWriteLock.beginWrite();
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
-            if (currentSize > 0) {
-                break;
-            }
-            readWriteLock.endWrite();
-        }
 
-        String name = linkedList.poll().name;
-        currentSize--;
-        // printList();
-        readWriteLock.endWrite();
-        return name;
+        lock.lock();
+        try {
+            while (currentSize < 0) {
+                try {
+                    notEmpty.await();
+                } catch(InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            String name = linkedList.poll().name;
+            --currentSize;
+            notFull.signal();
+
+            return name;
+        } finally {
+            lock.unlock();
+        }
     }
 
     /**
@@ -139,12 +176,14 @@ public class PriorityQueue {
 
     /* Prints out names of all Nodes in the queue.
      * Used for debugging purposes.
+     *
+     * Warning: only use this method when you have the lock.
      */
     private void printList() {
-        ListIterator<Node> iterator = linkedList.listIterator();
-        while (iterator.hasNext()) {
-            Node n = iterator.next();
+        System.out.print("[ ");
+        for (Node n : linkedList) {
             System.out.print(n.name + ", ");
         }
+        System.out.print("]");
     }
 }

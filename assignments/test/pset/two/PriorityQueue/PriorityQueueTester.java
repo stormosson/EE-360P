@@ -32,8 +32,8 @@ public class PriorityQueueTester {
     @Test
     public void testAddDuplicateReturnsNegativeOne() {
         PriorityQueue priorityQueue = new PriorityQueue(5);
-        assertEquals(PriorityQueue.add("Horses", 0));
-        assertEquals(PriorityQueue.add("Horses", -1));
+        assertEquals(0, priorityQueue.add("Horses", 0));
+        assertEquals(-1, priorityQueue.add("Horses", -1));
     }
 
 }
