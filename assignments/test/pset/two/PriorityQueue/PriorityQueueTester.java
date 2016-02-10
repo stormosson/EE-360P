@@ -1,3 +1,5 @@
+package pset.two.PriorityQueue;
+
 /*
  * Decompiled with CFR 0_110.
  * 
@@ -10,25 +12,35 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class PriorityQueueTester
-implements Runnable {
+import static org.junit.Assert.*;
+import org.junit.Test;
+
+import pset.two.PriorityQueue.PriorityQueue;
+
+public class PriorityQueueTester {
+
+    @Test
+    public void testConcurrentPriorityQueue() {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        PriorityQueue priorityQueue = new PriorityQueue(5);
+        for (int i = 0; i < 10; ++i) {
+            executorService.submit(new PriorityQueueTesterWorker(priorityQueue));
+        }
+        executorService.shutdown();
+    }
+
+}
+
+class PriorityQueueTesterWorker implements Runnable {
+
     static final int QUE_SIZE = 5;
     static final int THREAD_SIZE = 10;
     static final int THREAD_PAUSE_TIME = 50;
     static final int PRIORITY_RANGE = 10;
     private final PriorityQueue que;
 
-    public PriorityQueueTester(PriorityQueue priorityQueue) {
-        this.que = priorityQueue;
-    }
-
-    public static void main(String[] arrstring) {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        PriorityQueue priorityQueue = new PriorityQueue(5);
-        for (int i = 0; i < 10; ++i) {
-            executorService.submit(new PriorityQueueTester(priorityQueue));
-        }
-        executorService.shutdown();
+    public PriorityQueueTesterWorker(PriorityQueue queue) {
+        this.que = queue;
     }
 
     @Override

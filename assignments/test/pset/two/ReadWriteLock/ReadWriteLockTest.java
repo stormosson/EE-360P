@@ -1,3 +1,5 @@
+package pset.two.ReadWriteLock;
+
 /*
  * Decompiled with CFR 0_110.
  * 
@@ -11,26 +13,29 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-//import pset.two.Writer;
-//import pset.two.ReaderWriter;
-//import pset.two.Reader;
+
+import pset.two.ReadWriteLock.Writer;
+import pset.two.ReadWriteLock.Reader;
+import pset.two.ReadWriteLock.ReadWriteLock;
+
+import static org.junit.Assert.*;
+import org.junit.Test;
 
 public class ReadWriteLockTest {
     private static final int THREAD_SIZE = 16;
 
-    public static void main(String[] arrstring) {
+    @Test
+    public void testReadWriteLock() {
         int n;
         StringBuffer stringBuffer = new StringBuffer();
         ReadWriteLock readWriteLock = new ReadWriteLock();
         Random random = new Random();
         Future[] arrfuture = new Future[16];
         ExecutorService executorService = Executors.newCachedThreadPool();
-        System.out.println("Test Start");
         for (n = 0; n < 16; ++n) {
             int n2 = random.nextInt(100);
             arrfuture[n] = n2 < 30 ? executorService.submit(new Writer(readWriteLock, stringBuffer, n)) : executorService.submit(new Reader(readWriteLock, stringBuffer, n));
         }
-        System.out.println("Test middle");
         executorService.shutdown();
         for (n = 0; n < 16; ++n) {
             try {
@@ -45,7 +50,5 @@ public class ReadWriteLockTest {
                 var7_9.printStackTrace();
             }
         }
-        System.out.println(stringBuffer);
-        System.out.println("Test End");
     }
 }

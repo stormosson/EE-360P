@@ -1,11 +1,12 @@
-package pset.two;
+package pset.two.ReadWriteLock;
+
 /*
  * Decompiled with CFR 0_110.
  * 
  * Could not load the following classes:
  *  ReadWriteLock
  */
-final class Reader
+public final class Reader
 extends ReaderWriter {
     public Reader(ReadWriteLock readWriteLock, StringBuffer stringBuffer, int n) {
         super(readWriteLock, stringBuffer, n);
