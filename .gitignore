@@ -24,3 +24,4 @@ assignments/pset1/reports
 .eslintignore
 .eslintrc
 *.zip
+/homework-template/hw2/ReadWriteLock/cfr_0_110.jar
