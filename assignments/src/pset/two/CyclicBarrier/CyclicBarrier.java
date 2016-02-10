@@ -18,7 +18,7 @@ public class CyclicBarrier {
 	 * Construct a CyclicBarrier object
 	 * 
 	 * @param parties the number of threads that have invoked await on this
-	 * 			      barrier
+	 * barrier
 	 */
 	public CyclicBarrier(int parties) {
 		numLeft = this.parties = parties;
