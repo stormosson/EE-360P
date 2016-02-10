@@ -7,7 +7,7 @@ package pset.two.ReadWriteLock;
  *  ReadWriteLock
  */
 public final class Writer
-extends ReaderWriter {
+    extends ReaderWriter {
     public Writer(ReadWriteLock readWriteLock, StringBuffer stringBuffer, int n) {
         super(readWriteLock, stringBuffer, n);
     }

@@ -9,7 +9,7 @@ package pset.two.ReadWriteLock;
 import java.util.Random;
 
 abstract class ReaderWriter
-implements Runnable {
+    implements Runnable {
     static Random ran = new Random();
     static final int SLEEP_RANGE = 50;
     final int id;
