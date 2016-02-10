@@ -29,6 +29,13 @@ public class PriorityQueueTester {
         executorService.shutdown();
     }
 
+    @Test
+    public void testAddDuplicateReturnsNegativeOne() {
+        PriorityQueue priorityQueue = new PriorityQueue(5);
+        assertEquals(PriorityQueue.add("Horses", 0));
+        assertEquals(PriorityQueue.add("Horses", -1));
+    }
+
 }
 
 class PriorityQueueTesterWorker implements Runnable {
