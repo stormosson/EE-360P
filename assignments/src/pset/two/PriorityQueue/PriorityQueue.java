@@ -5,112 +5,145 @@ import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.Semaphore;
 
+/**
+ * @author Eric Crosson {@literal <eric.s.crosson@utexas.edu>}
+ * @author William "Stormy" Mauldin {@literal <stormymauldin@utexas.edu>}
+ * @version 0.1
+ * @since 2016-01-26
+ */
+
 public class PriorityQueue {
 
-    private final int maxSize;
-    private int currentSize = 0;
-    private LinkedList<Node> linkedList = new LinkedList<Node>();
-    private ReadWriteLock readWriteLock = new ReadWriteLock();
+	private final int maxSize;
+	private int currentSize = 0;
+	private LinkedList<Node> linkedList = new LinkedList<Node>();
+	private ReadWriteLock readWriteLock = new ReadWriteLock();
 
-    public PriorityQueue(int maxSize) {
-        // Creates a Priority queue with maximum allowed size as capacity
-        this.maxSize = maxSize;
-    }
+	/**
+	 * Construct a PriorityQueue object
+	 * 
+	 * @param maxSize the maximum allowed size of the priority queue
+	 */
+	public PriorityQueue(int maxSize) {
+		this.maxSize = maxSize;
+	}
 
-    public PriorityQueue() {
-        maxSize = 10; // safety
-    }
+	/**
+	 * Construct a PriorityQueue object. Uses an arbitrary maxSize
+	 */
+	public PriorityQueue() {
+		maxSize = 10; // safety
+	}
 
-    public int add(String name, int priority) {
-        // Adds the name with its priority to this queue.
-        // Returns the current position in the list where the name was inserted;
-        // otherwise, returns -1 if the name is already present in the list.
-        // This method blocks when the list is full.
-        try {
-            readWriteLock.beginWrite();
-        } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+	/**
+	 * Adds a new Node to the queue.
+	 * 
+	 * @param name the name of the Node
+	 * @param priority the priority of the Node
+	 * @return the index of placement
+	 * @return -1 if not placed
+	 */
+	public int add(String name, int priority) {
+		try {
+			readWriteLock.beginWrite();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 
-        int i = 0;
-        ListIterator<Node> iterator = linkedList.listIterator();
-        while (iterator.hasNext()) {
-            Node n = iterator.next();
-            if (n.priority < priority) {
-                break;
-            }
-            ++i;
-        }
+		int i = 0;
+		ListIterator<Node> iterator = linkedList.listIterator();
+		while (iterator.hasNext()) {
+			Node n = iterator.next();
+			if (n.priority < priority) {
+				break;
+			}
+			++i;
+		}
 
-        Node curNode = new Node();
-        curNode.priority = priority;
-        curNode.name = name;
-        linkedList.add(i, curNode);
-        ++currentSize;
-        readWriteLock.endWrite();
-        return i;
-    }
+		Node curNode = new Node();
+		curNode.priority = priority;
+		curNode.name = name;
+		linkedList.add(i, curNode);
+		++currentSize;
+		readWriteLock.endWrite();
+		return i;
+	}
 
-    public int search(String name) {
-        // Returns the position of the name in the list;
-        // otherwise, returns -1 if the name is not found.
-        try {
-            readWriteLock.beginRead();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        int i = 0;
-        boolean found = false;
-        for(Node n : linkedList)
-        {
-            if(n.name.equals(name)){
-                found = true;
-                break;
-            }
-            ++i;
-        }
+	/**
+	 * Searches the queue for first instance of Node with specified name
+	 * 
+	 * @param name the name of the Node
+	 * @return the position of the Node with specified name in the list
+	 * @return -1 if Node with specified name not found
+	 */
+	public int search(String name) {
+		try {
+			readWriteLock.beginRead();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+		int i = 0;
+		boolean found = false;
+		for (Node n : linkedList) {
+			if (n.name.equals(name)) {
+				found = true;
+				break;
+			}
+			++i;
+		}
 
-        if (!found) {
-            i = -1;
-        }
-        readWriteLock.endRead();
-        return i;
+		if (!found) {
+			i = -1;
+		}
+		readWriteLock.endRead();
+		return i;
 
-    }
+	}
 
-    public String poll() {
-        // Retrieves and removes the name with the highest priority in the list,
-        // or blocks the thread if the list is empty.
-        while (true) {
-            try {
-                readWriteLock.beginWrite();
-            } catch (InterruptedException e1) {
-                e1.printStackTrace();
-            }
-            if (currentSize > 0) {
-                break;
-            }
-            readWriteLock.endWrite();
-        }
+	/**
+	 * Retrieves and removes the Node with the highest prioirty in the queue.
+	 * Blocks thread if queue is empty.
+	 * 
+	 * @return name of the node with the highest priority
+	 */
+	public String poll() {
+		while (true) {
+			try {
+				readWriteLock.beginWrite();
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			if (currentSize > 0) {
+				break;
+			}
+			readWriteLock.endWrite();
+		}
 
-        String name = linkedList.poll().name;
-        currentSize--;
-        //printList();
-        readWriteLock.endWrite();
-        return name;
-    }
+		String name = linkedList.poll().name;
+		currentSize--;
+		// printList();
+		readWriteLock.endWrite();
+		return name;
+	}
 
-    class Node {
-        int priority;
-        String name;
-    }
+	/**
+	 * Data structure for placement in queue.
+	 * Contains name and priority.
+	 */
+	class Node {
+		int priority;
+		String name;
+	}
 
-    private void printList() {
-        ListIterator<Node> iterator = linkedList.listIterator();
-        while (iterator.hasNext()) {
-            Node n = iterator.next();
-            System.out.print(n.name + ", ");
-        }
-    }
+	/* Prints out names of all Nodes in the queue.
+	 * Used for debugging purposes.
+	 */
+	private void printList() {
+		ListIterator<Node> iterator = linkedList.listIterator();
+		while (iterator.hasNext()) {
+			Node n = iterator.next();
+			System.out.print(n.name + ", ");
+		}
+	}
 }
