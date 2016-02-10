@@ -6,6 +6,7 @@ GIT
       buildr (>= 1.4.6)
 
 GEM
+  remote: https://rubygems.org/
   specs:
     atoulme-Antwrap (0.7.5)
       rjb (>= 1.0.3)

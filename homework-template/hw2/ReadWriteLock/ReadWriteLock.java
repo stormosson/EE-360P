@@ -1,3 +1,7 @@
+package pset.two;
+
+import java.util.concurrent.Semaphore;
+
 
 public class ReadWriteLock {
     // This class has to provide the following properties:
@@ -10,21 +14,35 @@ public class ReadWriteLock {
     //    have acquired and released the lock or no preceding writer thread
     //    exists.
 
-	public void beginRead() {
+    private final static int MAX_SIZE = 1000;
+    Semaphore isReading = new Semaphore(MAX_SIZE);
+    Semaphore isWriting = new Semaphore(1);
 
-	}
+    public void beginRead() throws InterruptedException {
+        isWriting.acquire();
+        isReading.acquire();
+        isWriting.release();
+    }
 
-	public void endRead() {
+    public void endRead() {
+        isReading.release();
+    }
 
-	}
+    public void beginWrite() throws InterruptedException {
+        isWriting.acquire();
+        int permits = isReading.drainPermits();
+        while (permits < MAX_SIZE) {
+            permits += isReading.drainPermits();
+            Thread.yield();
+        }
+    }
 
-	public void beginWrite() {
-
-	}
-
-	public void endWrite() {
-
-	}
+    public void endWrite() {
+        isWriting.release();
+        isWriting.notifyAll();
+        isReading.release();
+        isReading.notifyAll();
+    }
 }
 
 
