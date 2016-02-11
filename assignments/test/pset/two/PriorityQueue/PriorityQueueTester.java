@@ -6,11 +6,9 @@ package pset.two.PriorityQueue;
  * Could not load the following classes:
  *  PriorityQueue
  */
-import java.io.PrintStream;
-import java.util.Random;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -44,13 +42,6 @@ public class PriorityQueueTester {
     }
     
     @Test
-    public void testAddNegativePriorityReturnsZero(){
-    	PriorityQueue priorityQueue = new PriorityQueue(5);
-    	assertEquals(0, priorityQueue.add("Horses", 0));
-    	assertEquals(0, priorityQueue.add("Horspes", -1));
-    }
-    
-    @Test
     public void testAddAndPollRegular1(){
     	PriorityQueue priorityQueue = new PriorityQueue(5);
     	assertEquals(0, priorityQueue.add("Horses", 0));
@@ -65,10 +56,19 @@ public class PriorityQueueTester {
     	assertEquals(1, priorityQueue.add("Horses", 1));
     	assertEquals("Horspes", priorityQueue.poll());
     }
-    
-    @Test
-    public void testAll(){
-    	PriorityQueue priorityQueue = new PriorityQueue(5);
+
+}
+
+class PriorityQueueTesterWorker implements Runnable {
+
+    private final PriorityQueue priorityQueue;
+
+    public PriorityQueueTesterWorker(PriorityQueue queue) {
+        this.priorityQueue = queue;
+    }
+
+    @Override
+    public void run() {
     	assertEquals(0, priorityQueue.add("Horspes", 2));
     	assertEquals(1, priorityQueue.add("Horsqes", 1));
     	assertEquals(2, priorityQueue.add("Horsres", 0));
@@ -78,66 +78,5 @@ public class PriorityQueueTester {
     	assertEquals("Horsues", priorityQueue.poll());
     	assertEquals(-1, priorityQueue.search("Horsxes"));
     	assertEquals(0, priorityQueue.search("Horspes"));
-    }
-
-}
-
-class PriorityQueueTesterWorker implements Runnable {
-
-    static final int QUE_SIZE = 5;
-    static final int THREAD_SIZE = 10;
-    static final int THREAD_PAUSE_TIME = 50;
-    static final int PRIORITY_RANGE = 10;
-    private final PriorityQueue que;
-
-    public PriorityQueueTesterWorker(PriorityQueue queue) {
-        this.que = queue;
-    }
-
-    @Override
-    public void run() {
-        Random random = new Random();
-        String string = Integer.toString(random.nextInt(10));
-        int n = random.nextInt(10);
-        try {
-            Thread.sleep(random.nextInt(50));
-        }
-        catch (InterruptedException var4_4) {
-            var4_4.printStackTrace();
-        }
-        boolean bl = false;
-        try {
-            if (this.que.add(string, n) >= 0) {
-                System.out.println("Insert " + string + " w/ priority " + n + " SUCEED!");
-                bl = true;
-            } else {
-                System.out.println("Insert " + string + " w/ priority " + n + " FAILED!");
-                bl = false;
-            }
-        }
-        catch (Exception var5_6) {
-            var5_6.printStackTrace();
-        }
-        try {
-            Thread.sleep(random.nextInt(50));
-        }
-        catch (InterruptedException var5_7) {
-            var5_7.printStackTrace();
-        }
-        if (bl) {
-            System.out.println(string + " is located at " + this.que.search(string));
-            try {
-                Thread.sleep(random.nextInt(50));
-            }
-            catch (InterruptedException var5_9) {
-                var5_9.printStackTrace();
-            }
-            try {
-                System.out.println("Pop first: " + this.que.poll());
-            }
-            catch (Exception var5_10) {
-                var5_10.printStackTrace();
-            }
-        }
     }
 }

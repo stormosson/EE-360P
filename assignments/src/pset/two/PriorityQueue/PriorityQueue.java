@@ -1,6 +1,5 @@
 package pset.two.PriorityQueue;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.concurrent.locks.ReentrantLock;
@@ -94,7 +93,6 @@ public class PriorityQueue {
             }
 
             System.out.println("After add: ");
-            printList();
 
             return i;
 
@@ -114,7 +112,6 @@ public class PriorityQueue {
 
         lock.lock();
         System.out.println("Searching for " + name + " in ");
-        printList();
         try {
             int i = 0;
             boolean found = false;
@@ -147,7 +144,7 @@ public class PriorityQueue {
 
         lock.lock();
         try {
-            while (currentSize < 0) {
+            while (currentSize <= 0) {
                 try {
                     notEmpty.await();
                 } catch(InterruptedException e) {
