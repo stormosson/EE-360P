@@ -33,7 +33,51 @@ public class PriorityQueueTester {
     public void testAddDuplicateReturnsNegativeOne() {
         PriorityQueue priorityQueue = new PriorityQueue(5);
         assertEquals(0, priorityQueue.add("Horses", 0));
-        assertEquals(-1, priorityQueue.add("Horses", -1));
+        assertEquals(-1, priorityQueue.add("Horses", 2));
+    }
+    
+    @Test
+    public void testSearchNotFoundReturnsNegativeOne(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horses", 0));
+    	assertEquals(-1, priorityQueue.search("Horspes"));
+    }
+    
+    @Test
+    public void testAddNegativePriorityReturnsZero(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horses", 0));
+    	assertEquals(0, priorityQueue.add("Horspes", -1));
+    }
+    
+    @Test
+    public void testAddAndPollRegular1(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horses", 0));
+    	assertEquals(0, priorityQueue.add("Horspes", 2));
+    	assertEquals("Horspes", priorityQueue.poll());
+    }
+    
+    @Test
+    public void testAddAndPollRegular2(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horspes", 2));
+    	assertEquals(1, priorityQueue.add("Horses", 1));
+    	assertEquals("Horspes", priorityQueue.poll());
+    }
+    
+    @Test
+    public void testAll(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horspes", 2));
+    	assertEquals(1, priorityQueue.add("Horsqes", 1));
+    	assertEquals(2, priorityQueue.add("Horsres", 0));
+    	assertEquals(0, priorityQueue.add("Horsses", 5));
+    	assertEquals(0, priorityQueue.add("Horstes", 8));
+    	assertEquals(0, priorityQueue.add("Horsues", 9));	//will have to wait until poll is called
+    	assertEquals("Horsues", priorityQueue.poll());
+    	assertEquals(-1, priorityQueue.search("Horsxes"));
+    	assertEquals(0, priorityQueue.search("Horspes"));
     }
 
 }
