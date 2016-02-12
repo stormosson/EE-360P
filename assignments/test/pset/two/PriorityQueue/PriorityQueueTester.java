@@ -6,11 +6,10 @@ package pset.two.PriorityQueue;
  * Could not load the following classes:
  *  PriorityQueue
  */
-import java.io.PrintStream;
+
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import static org.junit.Assert.*;
 import org.junit.Test;
@@ -20,11 +19,11 @@ import pset.two.PriorityQueue.PriorityQueue;
 public class PriorityQueueTester {
 
     @Test
-    public void testConcurrentPriorityQueue() {
+    public void testGivenConcurrentPriorityQueue() {
         ExecutorService executorService = Executors.newCachedThreadPool();
         PriorityQueue priorityQueue = new PriorityQueue(5);
         for (int i = 0; i < 10; ++i) {
-            executorService.submit(new PriorityQueueTesterWorker(priorityQueue));
+            executorService.submit(new PriorityQueueGivenTesterWorker(priorityQueue));
         }
         executorService.shutdown();
     }
@@ -33,21 +32,53 @@ public class PriorityQueueTester {
     public void testAddDuplicateReturnsNegativeOne() {
         PriorityQueue priorityQueue = new PriorityQueue(5);
         assertEquals(0, priorityQueue.add("Horses", 0));
-        assertEquals(-1, priorityQueue.add("Horses", -1));
+        assertEquals(-1, priorityQueue.add("Horses", 2));
+    }
+    
+    @Test
+    public void testSearchNotFoundReturnsNegativeOne(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horses", 0));
+    	assertEquals(-1, priorityQueue.search("Horspes"));
+    }
+    
+    @Test
+    public void testAddAndPollRegular1(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horses", 0));
+    	assertEquals(0, priorityQueue.add("Horspes", 2));
+    	assertEquals("Horspes", priorityQueue.poll());
+    }
+    
+    @Test
+    public void testAddAndPollRegular2(){
+    	PriorityQueue priorityQueue = new PriorityQueue(5);
+    	assertEquals(0, priorityQueue.add("Horspes", 2));
+    	assertEquals(1, priorityQueue.add("Horses", 1));
+    	assertEquals("Horspes", priorityQueue.poll());
+    }
+    
+    @Test
+    public void testCreatedConcurrentPriorityQueue() {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        PriorityQueue priorityQueue = new PriorityQueue(5);
+        for (int i = 0; i < 10; ++i) {
+            executorService.submit(new PriorityQueueCreatedTesterWorker(priorityQueue));
+        }
+        executorService.shutdown();
     }
 
 }
 
-class PriorityQueueTesterWorker implements Runnable {
-
-    static final int QUE_SIZE = 5;
+class PriorityQueueGivenTesterWorker implements Runnable {
+	static final int QUE_SIZE = 5;
     static final int THREAD_SIZE = 10;
     static final int THREAD_PAUSE_TIME = 50;
     static final int PRIORITY_RANGE = 10;
     private final PriorityQueue que;
 
-    public PriorityQueueTesterWorker(PriorityQueue queue) {
-        this.que = queue;
+    public PriorityQueueGivenTesterWorker(PriorityQueue priorityQueue) {
+        this.que = priorityQueue;
     }
 
     @Override
@@ -95,5 +126,27 @@ class PriorityQueueTesterWorker implements Runnable {
                 var5_10.printStackTrace();
             }
         }
+    }
+}
+
+class PriorityQueueCreatedTesterWorker implements Runnable {
+
+    private final PriorityQueue priorityQueue;
+
+    public PriorityQueueCreatedTesterWorker(PriorityQueue queue) {
+        this.priorityQueue = queue;
+    }
+
+    @Override
+    public void run() {
+    	assertEquals(0, priorityQueue.add("Horspes", 2));
+    	assertEquals(1, priorityQueue.add("Horsqes", 1));
+    	assertEquals(2, priorityQueue.add("Horsres", 0));
+    	assertEquals(0, priorityQueue.add("Horsses", 5));
+    	assertEquals(0, priorityQueue.add("Horstes", 8));
+    	assertEquals(0, priorityQueue.add("Horsues", 9));	//will have to wait until poll is called
+    	assertEquals("Horsues", priorityQueue.poll());
+    	assertEquals(-1, priorityQueue.search("Horsxes"));
+    	assertEquals(0, priorityQueue.search("Horspes"));
     }
 }
