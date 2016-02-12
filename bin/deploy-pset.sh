@@ -18,7 +18,7 @@ done
 
 
 destination=$(dirname $(readlink -e $0))/../deploy
-zipfile=${destination}/${target_pset}.zip
+zipfile=${destination}/esc625_wsm443.zip
 mkdir -p ${destination}
 rm ${zipfile}
 
