@@ -17,7 +17,7 @@ build/
 */target/
 *.launch
 */.metadata/
-assignments/pset1/reports
+reports/
 *.html
 *.js
 *.css
