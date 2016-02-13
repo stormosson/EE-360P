@@ -17,11 +17,10 @@ for i in ${source}/**/*.java ${source}/*.java; do
 done
 
 
-destination=$(dirname $(readlink -e $0))/../deploy
+destination=$(dirname $(readlink -e $0))/../deploy/${target_pset}
 zipfile=${destination}/esc625_wsm443.zip
 mkdir -p ${destination}
 rm ${zipfile}
-
 
 cd ${tmpsource}
 zip ${zipfile} *.java
