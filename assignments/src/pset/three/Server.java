@@ -124,7 +124,7 @@ public class Server {
 
         String response = "";
         for(String order : user_orders.get(username)) {
-            response += String.format("%s\n");
+            response += String.format("%s\n", order);
         }
         respond(tu, response);
     }
