@@ -1,7 +1,9 @@
 package pset.three;
 
-import java.util.Arrays;
 import java.util.Scanner;
+
+import java.util.Arrays;
+import java.util.ArrayList;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -11,6 +13,8 @@ public class Server {
     private static int order_nonce = 1;
     private static int[] ports;
     private static Map<String, Integer> inventory = null;
+    private static Map<String, String> ledger = null;
+    private static Map<String, ArrayList<String>> user_orders = null;
 
     public static void main (String[] args) {
         int tcpPort;
@@ -31,6 +35,7 @@ public class Server {
         /* Initialize -- parse the inventory file */
         System.out.println(Arrays.toString(args));
         inventory = new ConcurrentHashMap<String, Integer>();
+        ledger = new ConcurrentHashMap<String, String>();
 
         Scanner scan = new Scanner(filename);
         while(scan.hasNextLine()) {
@@ -54,21 +59,75 @@ public class Server {
 
     }
 
-    public static void purchase(String username, String product, 
-                                String quantity, String tu) {
+    public static void respond(String tu, String response);
 
+    public synchronized static void purchase(String username, String productname,
+                                             String quantity, String tu) {
+
+        if (!inventory.containsKey(productname)) {
+            respond(tu, "Not Available - We do not sell this product");
+            return;
+        }
+        /* We do have productname in our database */
+        int stock = inventory.get(productname);
+        if (stock - quantity < 0) {
+            respond(tu, "Not Available - Not enough items");
+            return;
+        }
+        /* We do have enough items in stock to complete sale */
+        inventory.put(productname, stock - quantity);
+        int orderid = order_nonce++;
+
+        /* Add user order to ledger */
+        ledger.put(orderid, String.format("%s %s", productname, quantity));
+
+
+        /* Relational databases would be great here -- record user orders */
+        List<String> orders = null;
+        if (!user_orders.containsKey(username)) {
+            orders = new ArrayList<String>();
+            user_orders.put(username, orders);
+        } else {
+            orders = user_orders.get(username);
+        }
+        orders.add(String.format("%s, %s, %s", 
+                                 orderid, productname, quantity));
+
+        respond(tu, String.format("You order has been placed, %s %s %s %s",
+                                  orderid, username, productname, quantity));
     }
 
-    public static void cancel(String orderid, String tu) {
-        
+    public synchronized static void cancel(String orderid, String tu) {
+
+        if (!ledger.containsKey(orderid)) {
+            respond(tu, String.format("%s not found, no such order", orderid));
+            return;
+        }
+        /* We recognize the order id, reverse contents of ledger */
+        String[] order = ledger.get(orderid).split("\\s+");
+        String productname = order[0];
+        Integer quantity = Integer.valueOf(order[1]);
+
+        inventory.put(productname, quantity + inventory.get(productname));
+        respond(tu, String.format("Order %s is canceled", orderid));
     }
 
-    public static void search(String username, String tu) {
+    public synchronized static void search(String username, String tu) {
         
+        if (!user_orders.containsKey(username)) {
+            respond(tu, String.format("No order found for %s", username));
+            return;
+        }
+
+        String response = "";
+        for(String order : user_orders.get(username)) {
+            response += order + "\n";
+        }
+        respond(tu, response);
     }
 
-    public static void list(String tu) {
-        
+    public synchronized static void list(String tu) {
+
     }
 
     private static void printMap(Map<String, Integer> map) {
