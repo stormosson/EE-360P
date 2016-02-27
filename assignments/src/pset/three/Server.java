@@ -13,7 +13,7 @@ public class Server {
     private static int order_nonce = 1;
     private static int[] ports;
     private static Map<String, Integer> inventory = null;
-    private static Map<String, String> ledger = null;
+    private static Map<Integer, String> ledger = null;
     private static Map<String, ArrayList<String>> user_orders = null;
 
     public static void main (String[] args) {
@@ -35,7 +35,7 @@ public class Server {
         /* Initialize -- parse the inventory file */
         System.out.println(Arrays.toString(args));
         inventory = new ConcurrentHashMap<String, Integer>();
-        ledger = new ConcurrentHashMap<String, String>();
+        ledger = new ConcurrentHashMap<Integer, String>();
 
         Scanner scan = new Scanner(filename);
         while(scan.hasNextLine()) {
@@ -73,20 +73,20 @@ public class Server {
         }
         /* We do have productname in our database */
         int stock = inventory.get(productname);
-        if (stock - quantity < 0) {
+        if (stock - Integer.parseInt(quantity) < 0) {
             respond(tu, "Not Available - Not enough items");
             return;
         }
         /* We do have enough items in stock to complete sale */
-        inventory.put(productname, stock - quantity);
-        int orderid = order_nonce++;
+        inventory.put(productname, stock - Integer.parseInt(quantity));
+        Integer orderid = order_nonce++;
 
         /* Add user order to ledger */
         ledger.put(orderid, String.format("%s %s", productname, quantity));
 
 
         /* Relational databases would be great here -- record user orders */
-        List<String> orders = null;
+        ArrayList<String> orders = null;
         if (!user_orders.containsKey(username)) {
             orders = new ArrayList<String>();
             user_orders.put(username, orders);
