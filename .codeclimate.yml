@@ -15,6 +15,7 @@ engines:
     enabled: true
     exclude_fingerprints:
       - 0fa136bca13c61977b5bf0a31f3614cf
+      - 9f299e630fb334cc95a0002f8eb44855
   radon:
     enabled: true
 ratings:
