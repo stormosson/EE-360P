@@ -59,7 +59,10 @@ public class Server {
 
     }
 
-    public static void respond(String tu, String response);
+    public static void respond(String tu, String response) {
+
+
+    }
 
     public synchronized static void purchase(String username, String productname,
                                              String quantity, String tu) {
@@ -121,13 +124,18 @@ public class Server {
 
         String response = "";
         for(String order : user_orders.get(username)) {
-            response += order + "\n";
+            response += String.format("%s\n");
         }
         respond(tu, response);
     }
 
     public synchronized static void list(String tu) {
 
+        String response = "";
+        for(String item : inventory.keySet()) {
+            response += String.format("%s %d\n", item, inventory.get(item));
+        }
+        respond(tu, response);
     }
 
     private static void printMap(Map<String, Integer> map) {
