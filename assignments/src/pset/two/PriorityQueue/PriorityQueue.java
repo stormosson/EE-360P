@@ -92,8 +92,6 @@ public class PriorityQueue {
                 notEmpty.signal();
             }
 
-            System.out.println("After add: ");
-
             return i;
 
         } finally {
