@@ -84,7 +84,6 @@ public class Server {
         /* Add user order to ledger */
         ledger.put(orderid, String.format("%s %s", productname, quantity));
 
-
         /* Relational databases would be great here -- record user orders */
         List<String> orders = null;
         if (!user_orders.containsKey(username)) {
@@ -99,7 +98,8 @@ public class Server {
         respond(tu, String.format("You order has been placed, %s %s %s %s",
                                   orderid, username, productname, quantity));
     }
-
+    
+    /* Assume: an order will not be canceled more than once */
     public synchronized static void cancel(String orderid, String tu) {
 
         if (!ledger.containsKey(orderid)) {
@@ -110,11 +110,15 @@ public class Server {
         String[] order = ledger.get(orderid).split("\\s+");
         String productname = order[0];
         Integer quantity = Integer.valueOf(order[1]);
+        /* remove the order from the ledger so we cannot 'spawn' infinite items
+         * through false returns */
+        ledger.remove(orderid);
 
         inventory.put(productname, quantity + inventory.get(productname));
         respond(tu, String.format("Order %s is canceled", orderid));
     }
 
+    /* Assume: canceled orders should still be listed */
     public synchronized static void search(String username, String tu) {
         
         if (!user_orders.containsKey(username)) {
