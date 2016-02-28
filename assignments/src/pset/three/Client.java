@@ -1,5 +1,7 @@
 package pset.three;
 
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Scanner;
 
 public class Client {
