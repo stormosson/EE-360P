@@ -43,7 +43,6 @@ public class Client {
             String cmd = sc.nextLine();
             String[] tokens = cmd.split("\\s+");
 
-            /* Honestly, what the hell is this */
             if (tokens[0].equals("purchase")) {
             } else if (tokens[0].equals("cancel")) {
             } else if (tokens[0].equals("search")) {
