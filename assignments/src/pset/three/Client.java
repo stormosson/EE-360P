@@ -53,17 +53,15 @@ public class Client {
             String message = String.format("%s\n", cmd);
             String response = "";
             try {
-            if (udp) {
-                
+                if (udp) {   
 					response = sendUdp(message, udpPort);	
-            } else {
-                response = sendTcp(message, tcpPort);
-            }
+                } else {
+                    response = sendTcp(message, tcpPort);
+                }
             } catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            /* TODO: do something with response? */
+            System.out.println(response);
         }
     }
 
