@@ -68,16 +68,16 @@ public class Server {
         u.start();
         t.start();
         try {
-        	u.join();
-			t.join();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
+            u.join();
+            t.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public synchronized static String purchase(String username,
-                                             String productname,
-                                             String quantity, String tu) {
+                                               String productname,
+                                               String quantity, String tu) {
 
         if (!inventory.containsKey(productname)) {
             return "Not Available - We do not sell this product";
@@ -182,17 +182,19 @@ class Handler implements Runnable {
     public void run() {
         try {
             String response = "";
+            String[] args = command[1].split("\\s+");
+            /* fuck you java this is so stupid. give me a splat operator! */
             if (this.command.equals("purchase")) {
-                response = Server.purchase(command[1].split("\\s+"));
+                response = Server.purchase(args[0], args[1], args[2], args[3]);
             }
             else if (this.command.equals("cancel")) {
-                response = Server.cancel(command[1].split("\\s+"));
+                response = Server.cancel(args[0], args[1]);
             }
             else if (this.command.equals("search")) {
-                response = Server.search(command[1].split("\\s+"));
+                response = Server.search(args[0], args[1]);
             }
             else if (this.command.equals("list")) {
-                response = Server.list(command[1].split("\\s+"));
+                response = Server.list(args[0]);
             }
             /* else: raise custom exception */
             respond(response);
