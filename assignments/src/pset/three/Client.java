@@ -34,7 +34,8 @@ public class Client {
         tcpPort = Integer.parseInt(args[1]);
         udpPort = Integer.parseInt(args[2]);
 
-        Scanner sc = new Scanner((Readable) (args.length == 3 ? System.in : args[3]));
+        Scanner sc = new Scanner((Readable)
+                                 (args.length == 3 ? System.in : args[3]));
         while(sc.hasNextLine()) {
 
             String cmd = sc.nextLine();
@@ -69,7 +70,7 @@ public class Client {
 
         byte[] sendData = message.getBytes();
         @SuppressWarnings("resource")
-		DatagramSocket dsocket = new DatagramSocket();
+            DatagramSocket dsocket = new DatagramSocket();
         InetAddress address = InetAddress.getByName("localhost");
         DatagramPacket sendPacket = new DatagramPacket(sendData, 
                                                        sendData.length,
@@ -86,7 +87,7 @@ public class Client {
     public static String sendTcp(String message, int port) throws IOException {
         
         @SuppressWarnings("resource")
-		Socket ssocket = new Socket("localhost", port);
+            Socket ssocket = new Socket("localhost", port);
         DataOutputStream stdout = 
             new DataOutputStream(ssocket.getOutputStream());
         BufferedReader stdin = 
