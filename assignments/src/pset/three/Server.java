@@ -3,7 +3,13 @@ package pset.three;
 import java.util.Scanner;
 
 import java.util.Arrays;
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -61,11 +67,15 @@ public class Server {
         Thread t = new Thread(new TcpListener(tcpPort));
         u.start();
         t.start();
-        u.join();
-        t.join();
+        try {
+        	u.join();
+			t.join();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
     }
 
-    public synchronized static void purchase(String username,
+    public synchronized static String purchase(String username,
                                              String productname,
                                              String quantity, String tu) {
 
@@ -119,7 +129,7 @@ public class Server {
 
     /* Assume: canceled orders should still be listed */
     /* Assume: username exists */
-    public synchronized static void search(String username, String tu) {
+    public synchronized static String search(String username, String tu) {
 
         if (!user_orders.containsKey(username)) {
             return String.format("No order found for %s", username);
@@ -132,7 +142,7 @@ public class Server {
         return response;
     }
 
-    public synchronized static void list(String tu) {
+    public synchronized static String list(String tu) {
 
         String response = "";
         for (String item : inventory.keySet()) {
@@ -155,13 +165,17 @@ class Handler implements Runnable {
     boolean udp;
     InetAddress address;
     Integer port;
+    Socket tcpsocket;
+    DatagramSocket udpsocket;
 
-    UdpHandler(String command, Socket tcpsocket, DatagramSocket udpsocket, 
+    public Handler(String command, Socket tcpsocket, DatagramSocket udpsocket, 
                InetAddress return_address, Integer port) {
         this.command = command.split("\\s+", 2);
         this.udp = udpsocket == null;
         this.address = return_address;
         this.port = port;
+        this.tcpsocket = tcpsocket;
+        this.udpsocket = udpsocket;
     }
 
     @Override
@@ -169,32 +183,32 @@ class Handler implements Runnable {
         try {
             String response = "";
             if (this.command.equals("purchase")) {
-                response = Server.purchase(command[1].split())
+                response = Server.purchase(command[1].split("\\s+"));
             }
             else if (this.command.equals("cancel")) {
-                response = Server.cancel(command[1].split())
+                response = Server.cancel(command[1].split("\\s+"));
             }
             else if (this.command.equals("search")) {
-                response = Server.search(command[1].split())
+                response = Server.search(command[1].split("\\s+"));
             }
             else if (this.command.equals("list")) {
-                response = Server.list(command[1].split())
+                response = Server.list(command[1].split("\\s+"));
             }
             /* else: raise custom exception */
-            return response;
+            respond(response);
         } catch (IOException e) {
             System.err.println(String.format("Request aborted: %s", e));
         }
     }
 
-    private void response(String message) {
+    private void respond(String message) throws IOException {
         if (udp) {
             byte[] data = message.getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length, 
                                                        this.address, port);
-            udpsocket.send(packet);
-        } else if (tcp) {
-            DataOutpuStream stdout = 
+            this.udpsocket.send(packet);
+        } else {
+            DataOutputStream stdout = 
                 new DataOutputStream(tcpsocket.getOutputStream());
             stdout.writeBytes(message);
         }
@@ -221,7 +235,7 @@ class TcpListener implements Runnable {
                 BufferedReader reader = new BufferedReader(stdin);
                 new Thread(new Handler(reader.readLine(), dsocket, null, 
                                        dsocket.getInetAddress(), 
-                                       dsocket.getPort()).start();
+                                       dsocket.getPort())).start();
             }
         } catch (IOException e) {
             System.err.println("Server aborted: " + e);
@@ -245,12 +259,12 @@ class UdpListener implements Runnable {
             DatagramSocket dsocket = new DatagramSocket(port);
             DatagramPacket dpacket = new DatagramPacket(buffer, buffer.length);
             while (true) {
-                dsocket.receive(packet);
-                String command = new String(buffer, 0, packet.getLength());
+                dsocket.receive(dpacket);
+                String command = new String(buffer, 0, dpacket.getLength());
                 new Thread(new Handler(command, null, dsocket, 
                                        dpacket.getAddress(), 
                                        dpacket.getPort())).start();
-                packet.setLength(buffer.length);
+                dpacket.setLength(buffer.length);
             }
         } catch (IOException e) {
             System.err.println(String.format("Request aborted: %s", e));
