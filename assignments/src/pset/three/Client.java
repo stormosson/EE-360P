@@ -2,6 +2,8 @@ package pset.three;
 
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
@@ -13,7 +15,8 @@ import java.util.Scanner;
 
 public class Client {
 
-    public static void main (String[] args) {
+    @SuppressWarnings("resource")
+	public static void main (String[] args) {
 
         String hostAddress;
         int tcpPort;
@@ -34,12 +37,21 @@ public class Client {
         tcpPort = Integer.parseInt(args[1]);
         udpPort = Integer.parseInt(args[2]);
 
-        Scanner sc = new Scanner((Readable) (args.length == 3 ? System.in : args[3]));
+        Scanner sc = null;
+        if (args.length == 3) {
+        	sc = new Scanner(System.in);
+        } else {
+        	try {
+				sc = new Scanner(new File(args[3]));
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+        }
         while(sc.hasNextLine()) {
 
             String cmd = sc.nextLine();
             String[] tokens = cmd.split("\\s+");
-
+            System.out.print(cmd);
             /* Honestly, what the hell is this */
             if (tokens[0].equals("purchase")) {
             } else if (tokens[0].equals("cancel")) {
@@ -48,6 +60,7 @@ public class Client {
             } else {
                 System.out.println("ERROR: No such command");
             }
+            System.out.print(cmd);
 
             boolean udp = tokens[tokens.length-1].toLowerCase().startsWith("u");
             String message = String.format("%s\n", cmd);

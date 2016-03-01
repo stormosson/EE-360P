@@ -5,6 +5,8 @@ import java.util.Scanner;
 import java.util.Arrays;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.DatagramPacket;
@@ -50,7 +52,12 @@ public class Server {
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
 
-        Scanner scan = new Scanner(filename);
+        Scanner scan = null;
+		try {
+			scan = new Scanner(new File(filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
         while (scan.hasNextLine()) {
             String[] line = scan.nextLine().split("\\s+");
             if (line.length != 2)
