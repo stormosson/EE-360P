@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -51,7 +52,7 @@ public class Client {
 
             String cmd = sc.nextLine();
             String[] tokens = cmd.split("\\s+");
-            System.out.print(cmd);
+            System.out.println(cmd);
             /* Honestly, what the hell is this */
             if (tokens[0].equals("purchase")) {
             } else if (tokens[0].equals("cancel")) {
@@ -60,16 +61,15 @@ public class Client {
             } else {
                 System.out.println("ERROR: No such command");
             }
-            System.out.print(cmd);
 
             boolean udp = tokens[tokens.length-1].toLowerCase().startsWith("u");
             String message = String.format("%s\n", cmd);
             String response = "";
             try {
                 if (udp) {   
-                    response = sendUdp(message, udpPort);	
+                    response = sendUdp(message, hostAddress, udpPort);	
                 } else {
-                    response = sendTcp(message, tcpPort);
+                    response = sendTcp(message, hostAddress, tcpPort);
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -78,15 +78,17 @@ public class Client {
         }
     }
 
-    public static String sendUdp(String message, int port) throws IOException {
-
+    public static String sendUdp(String message, String address, int port) 
+    		throws IOException {
+    	
+    	System.out.println("This is what we are sending: " + message);
         byte[] sendData = message.getBytes();
         @SuppressWarnings("resource")
 		DatagramSocket dsocket = new DatagramSocket();
-        InetAddress address = InetAddress.getByName("localhost");
+        InetAddress iAddress = InetAddress.getByName(address);
         DatagramPacket sendPacket = new DatagramPacket(sendData, 
                                                        sendData.length,
-                                                       address, port);
+                                                       iAddress, port);
         dsocket.send(sendPacket);
 
         byte[] receiveData = new byte[2048];
@@ -96,16 +98,17 @@ public class Client {
         return new String(receivePacket.getData());
     }
 
-    public static String sendTcp(String message, int port) throws IOException {
-        
-        @SuppressWarnings("resource")
-		Socket ssocket = new Socket("localhost", port);
-        DataOutputStream stdout = 
-            new DataOutputStream(ssocket.getOutputStream());
-        BufferedReader stdin = 
-            new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
-
-        stdout.writeBytes(message);
+    public static String sendTcp(String message, String address, int port)
+    		throws IOException {
+    	
+    	System.out.println("Connection attempted to Server " + address + ", Port " + port + ".");
+		Socket ssocket = new Socket(address, port);
+		System.out.println("Connection to " + ssocket.getRemoteSocketAddress() + " established.");
+		BufferedReader stdin = 
+	            new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
+        PrintWriter stdout = 
+            new PrintWriter(ssocket.getOutputStream(), true);
+        stdout.print(message);
         return stdin.readLine();
     }
 }
