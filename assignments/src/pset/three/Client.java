@@ -4,8 +4,15 @@ import java.io.*;
 import java.net.*;
 import java.util.Scanner;
 
+/** Client class
+ */
 public class Client {
 
+    private static DataInputStream stdin;
+    private static DataOutputStream stdout;
+
+    /** Start a client based on given command line arguments.
+     */
     @SuppressWarnings("resource")
     public static void main (String[] args) {
 
@@ -60,13 +67,13 @@ public class Client {
                 } else {
                     response = sendTcp(message, hostAddress, tcpPort);
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            } catch (IOException e) { e.printStackTrace(); }
             System.out.print(String.format("%s", response));
         }
     }
 
+    /** Send a message to specified address and port via UDP.
+     */
     public static String sendUdp(String message, String address, int port)
         throws IOException {
 
@@ -86,14 +93,14 @@ public class Client {
         return new String(receivePacket.getData());
     }
 
+    /** Send a message to specified address and port via TCP.
+     */
     public static String sendTcp(String message, String address, int port)
         throws IOException {
       
         Socket ssocket = new Socket(address, port);
-        DataOutputStream stdout = 
-            new DataOutputStream(ssocket.getOutputStream());
-        DataInputStream stdin =
-            new DataInputStream(ssocket.getInputStream());
+        stdout = new DataOutputStream(ssocket.getOutputStream());
+        stdin = new DataInputStream(ssocket.getInputStream());
         stdout.writeUTF(message);
         return stdin.readUTF();
     }

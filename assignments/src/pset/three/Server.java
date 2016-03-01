@@ -10,8 +10,9 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-/* TODO: javadoc */
 
+/** Server class. This server assumes all requests will be valid.
+ */
 public class Server {
 
     private static int order_nonce = 1;
@@ -20,6 +21,8 @@ public class Server {
     private static Map<Integer, String> ledger = null;
     private static Map<String, ArrayList<String>> user_orders = null;
 
+    /** Start a server based on given command line arguments. 
+     */
     public static void main(String[] args) {
         int tcpPort;
         int udpPort;
@@ -74,6 +77,8 @@ public class Server {
         }
     }
 
+    /** Handle a purchase event.
+     */
     public synchronized static String purchase(String username,
                                                String productname,
                                                String quantity, String tu) {
@@ -107,7 +112,10 @@ public class Server {
                              orderid, username, productname, quantity);
     }
 
-    /* Assume: an order will not be canceled more than once */
+    /** Handle an order cancellation.
+     *
+     * Assumes an order will not be canceled more than once.
+     */
     public synchronized static String cancel(String orderid, String tu) {
 
         if (!ledger.containsKey(orderid)) {
@@ -118,7 +126,7 @@ public class Server {
         String productname = order[0];
         Integer quantity = Integer.valueOf(order[1]);
 
-        /* remove the order from the ledger so we cannot 'spawn' infinite items
+        /* Remove the order from the ledger so we cannot 'spawn' infinite items
          * through false returns */
         ledger.remove(orderid);
 
@@ -126,8 +134,11 @@ public class Server {
         return String.format("Order %s is canceled", orderid);
     }
 
-    /* Assume: canceled orders should still be listed */
-    /* Assume: username exists */
+    /** Handle a search request.
+     *
+     * Assume canceled orders should still be listed.
+     * Assume username exists in our database.
+     */
     public synchronized static String search(String username, String tu) {
 
         if (!user_orders.containsKey(username)) {
@@ -141,6 +152,8 @@ public class Server {
         return response;
     }
 
+    /** Handle an inventory list query.
+     */
     public synchronized static String list(String tu) {
 
         String response = "";
@@ -150,6 +163,8 @@ public class Server {
         return response;
     }
 
+    /** Print a Map object to stdout.
+     */
     private static void printMap(Map<String, Integer> map) {
         System.out.print("{");
         for (String item : map.keySet())
@@ -158,6 +173,8 @@ public class Server {
     }
 }
 
+/** Handler class to dispatch received commands to the singleton Server.
+ */
 class Handler implements Runnable {
 
     String[] command;
@@ -167,6 +184,8 @@ class Handler implements Runnable {
     Socket tcpsocket;
     DatagramSocket udpsocket;
 
+    /** Create a handler capable of responding over TCP/UDP.
+     */
     public Handler(String command, boolean udp, Socket tcpsocket,
                    DatagramSocket udpsocket, InetAddress return_address,
                    Integer port) {
@@ -179,6 +198,9 @@ class Handler implements Runnable {
         this.udpsocket = udpsocket;
     }
 
+    /** Handler's run method, parses received command and relays information to
+     * Server.
+     */
     @Override
     public void run() {
         try {
@@ -205,6 +227,8 @@ class Handler implements Runnable {
         }
     }
 
+    /** Respond via TCP or UDP to the Client that pinged the Server API.
+     */
     private void respond(String message) throws IOException {
 
         if (udp) {
@@ -220,11 +244,15 @@ class Handler implements Runnable {
     }
 }
 
+/** Listener class to accept requests over a TCP connection.
+ */
 class TcpListener implements Runnable {
     
     int port;
     ServerSocket ssocket;
 
+    /** Spawn a TCP listener on specified port.
+     */
     TcpListener(int port){
         this.port = port;
         try{
@@ -233,6 +261,9 @@ class TcpListener implements Runnable {
             System.err.println(String.format("Server aborted: %s", e));
         }
     }
+
+    /** Listener event loop -- dispatches messages to Handler.
+     */
     @Override
     public void run() {
         try { 
@@ -253,15 +284,21 @@ class TcpListener implements Runnable {
     }
 }
 
+/** Listener class to accept requests over a UDP connection.
+ */
 class UdpListener implements Runnable {
 
     int port;
     byte[] buffer = new byte[2048];
 
+    /** Spawn a UDP listener on specified port.
+     */
     UdpListener(int port) {
         this.port = port;
     }
 
+    /** Listener event loop -- dispatches messages to Handler.
+     */
     @Override
     public void run() {
 
