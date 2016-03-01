@@ -99,16 +99,19 @@ public class Client {
     }
 
     public static String sendTcp(String message, String address, int port)
-        throws IOException {
-
-        System.out.println("Connection attempted to Server " + address + ", Port " + port + ".");
-        Socket ssocket = new Socket(address, port);
-        System.out.println("Connection to " + ssocket.getRemoteSocketAddress() + " established.");
-        BufferedReader stdin =
-            new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
-        PrintWriter stdout =
+    		throws IOException {
+    	
+    	System.out.println("Connection attempted to Server " + address + ", Port " + port + ".");
+		Socket ssocket = new Socket(address, port);
+		System.out.println("Connection to " + ssocket.getRemoteSocketAddress() + " established.");
+        PrintWriter stdout = 
             new PrintWriter(ssocket.getOutputStream(), true);
+        System.out.println("Printwriter opened");
+        BufferedReader stdin = 
+	            new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
+        System.out.println("bufferedreader opened");
         stdout.print(message);
+        System.out.println("message sent");
         return stdin.readLine();
     }
 }

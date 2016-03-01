@@ -240,6 +240,7 @@ class TcpListener implements Runnable {
         this.port = port;
         try{
         	ssocket = new ServerSocket(port);
+        	System.out.println(port);
         }catch(IOException e){}
     }
     @Override
@@ -252,7 +253,9 @@ class TcpListener implements Runnable {
                 InputStreamReader stdin = 
                     new InputStreamReader(dsocket.getInputStream());
                 BufferedReader reader = new BufferedReader(stdin);
+                System.out.println("BufferedReader opened");
                 String cmd = reader.readLine();
+                System.out.println("HEY LOOK AT THIS: " + cmd);
                 new Thread(new Handler(cmd, false, dsocket, null, 
                                        dsocket.getInetAddress(), 
                                        dsocket.getPort())).start();
