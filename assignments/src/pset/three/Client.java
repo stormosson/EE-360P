@@ -1,5 +1,12 @@
 package pset.three;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Scanner;
@@ -27,7 +34,7 @@ public class Client {
         tcpPort = Integer.parseInt(args[1]);
         udpPort = Integer.parseInt(args[2]);
 
-        Scanner sc = new Scanner((args.length == 3 ? System.in : args[3]));
+        Scanner sc = new Scanner((Readable) (args.length == 3 ? System.in : args[3]));
         while(sc.hasNextLine()) {
 
             String cmd = sc.nextLine();
@@ -45,35 +52,43 @@ public class Client {
             boolean udp = tokens[tokens.length-1].toLowerCase().startsWith("u");
             String message = String.format("%s\n", cmd);
             String response = "";
+            try {
             if (udp) {
-                response = sendUcp(message, udpPort);
+                
+					response = sendUdp(message, udpPort);	
             } else {
                 response = sendTcp(message, tcpPort);
             }
+            } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
             /* TODO: do something with response? */
         }
     }
 
-    public String sendUdp(String message, int port) {
+    public static String sendUdp(String message, int port) throws IOException {
 
         byte[] sendData = message.getBytes();
-        DatagramSocket dsocket = new DatagramSocket();
+        @SuppressWarnings("resource")
+		DatagramSocket dsocket = new DatagramSocket();
         InetAddress address = InetAddress.getByName("localhost");
         DatagramPacket sendPacket = new DatagramPacket(sendData, 
                                                        sendData.length,
                                                        address, port);
-        ssocket.send(sendPacket);
+        dsocket.send(sendPacket);
 
         byte[] receiveData = new byte[2048];
         DatagramPacket receivePacket = new DatagramPacket(receiveData, 
                                                           receiveData.length);
-        ssocket.receive(receivePacket);
+        dsocket.receive(receivePacket);
         return new String(receivePacket.getData());
     }
 
-    public String sendTcp(String message, int port) {
+    public static String sendTcp(String message, int port) throws IOException {
         
-        Socket ssocket = new Socket("localhost", port);
+        @SuppressWarnings("resource")
+		Socket ssocket = new Socket("localhost", port);
         DataOutputStream stdout = 
             new DataOutputStream(ssocket.getOutputStream());
         BufferedReader stdin = 

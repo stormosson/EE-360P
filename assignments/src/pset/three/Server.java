@@ -207,7 +207,7 @@ class Handler implements Runnable {
         if (udp) {
             byte[] data = message.getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length, 
-                                                       his.address, this.port);
+                                                       this.address, this.port);
             this.udpsocket.send(packet);
         } else {
             DataOutputStream stdout = 
