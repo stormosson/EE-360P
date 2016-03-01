@@ -1,0 +1,100 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{fixltx2e}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{textcomp}
+\usepackage{marvosym}
+\usepackage{wasysym}
+\usepackage{hyperref}
+\tolerance=1000
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{enumerate}
+\usepackage{showexpl}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+\newcommand{\todo}{{\LARGE \emph{\color{red}TODO}}}
+\hypersetup{
+  pdfkeywords={},
+  pdfsubject={}}
+\newcounter{problem}
+\newcounter{solution}
+\usepackage{beramono}
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{inconsolata}
+\usepackage{color}
+\definecolor{pblue}{rgb}{0.13,0.13,1}
+\definecolor{pgreen}{rgb}{0,0.5,0}
+\definecolor{pred}{rgb}{0.9,0,0}
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
+\lstset{language=Java,
+  showspaces=false,
+  showtabs=false,
+  breaklines=true,
+  showstringspaces=false,
+  breakatwhitespace=true,
+  commentstyle=\color{pgreen},
+  keywordstyle=\color{pblue},
+  stringstyle=\color{pred},
+  basicstyle=\ttfamily,
+  moredelim=[il][\textcolor{pgrey}]{$$},
+  moredelim=[is][\textcolor{pgrey}]{\%\%}{\%\%}
+}
+% \parindent 0in
+% \parskip 1em.
+\begin{document}
+\title{EE 360P:\@Concurrent and Distributed Systems \\ Assignment 3}
+\author{Student: Eric Crosson (email: eric.s.crosson@utexas.edu)\\
+  Student: William ``Stormy'' Mauldin (email: stormymauldin@utexas.edu)}
+\date{\today}
+\maketitle
+
+This homework contains a programming part (Q1) and a theory part (Q3). The
+theory part should be written or typed on a paper and submitted at the beginning
+of the class. The source code (Java files) of the programming part must be
+uploaded through the canvas before the end of the due date (i.e., 11:59pm in
+March 1. The assignment should be done in teams of two. You
+should use the templates downloaded from the course github
+(https://github.com/vijaygarg1/EE-360P.git). You should not change the file
+names and function signatures. In addition, you should not use package for
+encapsulation. Note that, we provide some test cases for your convenience in
+SimpleTest class. You do not need to modify the class. Please zip and name the
+source code as [EID1 EID2].zip. \\
+
+\begin{enumerate}
+\item \textbf{(10 points)} 
+\begin{enumerate}[(a)]
+\item Prove or disprove that every symmetric and transitive relation is reflexive.  
+\begin{proof}[Disproof]
+Given a set $A = \{a,b,c\}$, let a relation $R$ on $A$ be defined as such: 
+
+\begin{equation*}
+R=\{(a,b),(b,a),(a,a),(b,b)\}
+\end{equation*}
+
+From the definition of symmetry, it can be seen that $R$ is a symmetric relation since $xRy \Rightarrow yRx$ for some arbitrary $x,y,z\in A$. From the definition of transitivity, it can be seen that $R$ is a transitive relation since $xRy \wedge yRz \Rightarrow xRz$ for some arbitrary $x,y,z\in A$. The definition of reflexivity requires that $\forall x\in A$, $xRx$. However, we can see from the set $A$ definition of the relation $R$ that $c\in A \wedge (c,c)\notin R$, which implies that $R$ is not reflexive. Since $R$ is symmetric and transitive but not reflexive, then the claim that every symmetric and transitive relation is not true.
+\end{proof}
+
+\item Prove or disprove that every irreflexive and transitive relation is asymmetric.  
+\begin{proof}
+Assume that some relation $R$ on a set $A$ is irreflexive and transitive. Assume also that $(x,y)\in R$ for some arbitrary $x,y\in A$ such that $x \neq y$. By the definition of asymmetry, $(y,x)$ cannot be a member of $R$. Now assume that such is the case. Since $R$ was assumed to be transitive, then $(x,y)\in R\wedge(y,x)\in R \Rightarrow (x,x)\in R$, which contradicts the assumption of irreflexivity. Therefore, it must be true that every irreflexive and transitive relation is asymmetric.
+\end{proof}
+\end{enumerate}
+\end{enumerate}
+\end{document}
