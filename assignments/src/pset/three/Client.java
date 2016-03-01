@@ -1,23 +1,13 @@
 package pset.three;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
+import java.io.*;
+import java.net.*;
 import java.util.Scanner;
 
 public class Client {
 
     @SuppressWarnings("resource")
-  public static void main (String[] args) {
+    public static void main (String[] args) {
 
         String hostAddress;
         int tcpPort;
@@ -52,7 +42,7 @@ public class Client {
 
             String cmd = sc.nextLine();
             String[] tokens = cmd.split("\\s+");
-            System.out.println(cmd);
+
             /* Honestly, what the hell is this */
             if (tokens[0].equals("purchase")) {
             } else if (tokens[0].equals("cancel")) {
@@ -74,14 +64,13 @@ public class Client {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println(response);
+            System.out.print(String.format("%s", response));
         }
     }
 
     public static String sendUdp(String message, String address, int port)
         throws IOException {
 
-        System.out.println("This is what we are sending: " + message);
         byte[] sendData = message.getBytes();
         @SuppressWarnings("resource")
             DatagramSocket dsocket = new DatagramSocket();
@@ -99,19 +88,14 @@ public class Client {
     }
 
     public static String sendTcp(String message, String address, int port)
-    		throws IOException {
-    	
-    	System.out.println("Connection attempted to Server " + address + ", Port " + port + ".");
-		Socket ssocket = new Socket(address, port);
-		System.out.println("Connection to " + ssocket.getRemoteSocketAddress() + " established.");
-        PrintWriter stdout = 
-            new PrintWriter(ssocket.getOutputStream(), true);
-        System.out.println("Printwriter opened");
-        BufferedReader stdin = 
-	            new BufferedReader(new InputStreamReader(ssocket.getInputStream()));
-        System.out.println("bufferedreader opened");
-        stdout.print(message);
-        System.out.println("message sent");
-        return stdin.readLine();
+        throws IOException {
+      
+        Socket ssocket = new Socket(address, port);
+        DataOutputStream stdout = 
+            new DataOutputStream(ssocket.getOutputStream());
+        DataInputStream stdin =
+            new DataInputStream(ssocket.getInputStream());
+        stdout.writeUTF(message);
+        return stdin.readUTF();
     }
 }

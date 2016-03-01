@@ -2,19 +2,9 @@ package pset.three;
 
 import java.util.Scanner;
 
+import java.net.*;
+import java.io.*;
 import java.util.Arrays;
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import java.util.Map;
@@ -49,16 +39,16 @@ public class Server {
         String filename = args[2];
 
         /* Initialize -- parse the inventory file */
-        System.out.println(Arrays.toString(args));
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
+        user_orders = new ConcurrentHashMap<String, ArrayList<String>>();
 
         Scanner scan = null;
-		try {
-			scan = new Scanner(new File(filename));
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
-		}
+        try {
+            scan = new Scanner(new File(filename));
+        } catch (FileNotFoundException e1) {
+            e1.printStackTrace();
+        }
         while (scan.hasNextLine()) {
             String[] line = scan.nextLine().split("\\s+");
             if (line.length != 2)
@@ -88,8 +78,7 @@ public class Server {
                                                String productname,
                                                String quantity, String tu) {
 
-        System.out.println("shit we got: " + String.format("%s, %s, %s", username, productname, quantity));
-    	if (!inventory.containsKey(productname)) {
+        if (!inventory.containsKey(productname)) {
             return "Not Available - We do not sell this product";
         }
         /* We do have productname in our database */
@@ -149,7 +138,7 @@ public class Server {
         for (String order : user_orders.get(username)) {
             response += String.format("%s\n", order);
         }
-        return response;
+        return response.trim();
     }
 
     public synchronized static String list(String tu) {
@@ -158,7 +147,7 @@ public class Server {
         for (String item : inventory.keySet()) {
             response += String.format("%s %d\n", item, inventory.get(item));
         }
-        return response;
+        return response.trim();
     }
 
     private static void printMap(Map<String, Integer> map) {
@@ -179,9 +168,10 @@ class Handler implements Runnable {
     DatagramSocket udpsocket;
 
     public Handler(String command, boolean udp, Socket tcpsocket,
-    		   DatagramSocket udpsocket, InetAddress return_address,
-    		   Integer port) {
-        this.command = command.split("\\s+", 2);
+                   DatagramSocket udpsocket, InetAddress return_address,
+                   Integer port) {
+
+        this.command = command.trim().split("\\s+", 2);
         this.udp = udp;
         this.address = return_address;
         this.port = port;
@@ -192,19 +182,20 @@ class Handler implements Runnable {
     @Override
     public void run() {
         try {
+
             String response = "";
             String[] args = command[1].split("\\s+");
             
-            if (this.command.equals("purchase")) {
+            if (this.command[0].equals("purchase")) {
                 response = Server.purchase(args[0], args[1], args[2], args[3]);
             }
-            else if (this.command.equals("cancel")) {
+            else if (this.command[0].equals("cancel")) {
                 response = Server.cancel(args[0], args[1]);
             }
-            else if (this.command.equals("search")) {
+            else if (this.command[0].equals("search")) {
                 response = Server.search(args[0], args[1]);
             }
-            else if (this.command.equals("list")) {
+            else if (this.command[0].equals("list")) {
                 response = Server.list(args[0]);
             }
             /* else: raise custom exception */
@@ -215,18 +206,16 @@ class Handler implements Runnable {
     }
 
     private void respond(String message) throws IOException {
-    	System.out.println(message);
+
         if (udp) {
             byte[] data = message.getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length, 
                                                        this.address, this.port);
             this.udpsocket.send(packet);
         } else {
-        	System.out.println("This server's port is " + this.port + ".");
-            PrintWriter stdout = 
-                new PrintWriter(this.tcpsocket.getOutputStream(), true);
-            stdout.print(message);
-            stdout.flush();
+            DataOutputStream stdout =
+                new DataOutputStream(tcpsocket.getOutputStream());
+            stdout.writeUTF(message);
         }
     }
 }
@@ -239,29 +228,27 @@ class TcpListener implements Runnable {
     TcpListener(int port){
         this.port = port;
         try{
-        	ssocket = new ServerSocket(port);
-        	System.out.println(port);
-        }catch(IOException e){}
+            ssocket = new ServerSocket(port);
+        } catch(IOException e) {
+            System.err.println(String.format("Server aborted: %s", e));
+        }
     }
     @Override
     public void run() {
         try { 
             while (true) {
-            	System.out.println("This server's port is " + this.port + ".");
                 Socket dsocket = ssocket.accept();
-                System.out.println("Connection to " + dsocket.getRemoteSocketAddress() + " established.");
-                InputStreamReader stdin = 
-                    new InputStreamReader(dsocket.getInputStream());
-                BufferedReader reader = new BufferedReader(stdin);
-                System.out.println("BufferedReader opened");
-                String cmd = reader.readLine();
-                System.out.println("HEY LOOK AT THIS: " + cmd);
+                DataInputStream stdin = 
+                    new DataInputStream(dsocket.getInputStream());
+                DataOutputStream reader = 
+                    new DataOutputStream(dsocket.getOutputStream());
+                String cmd = stdin.readUTF();
                 new Thread(new Handler(cmd, false, dsocket, null, 
                                        dsocket.getInetAddress(), 
                                        dsocket.getPort())).start();
             }
         } catch (IOException e) {
-            System.err.println("Server aborted: " + e);
+            System.err.println(String.format("Server aborted: %s", e));
         }
     }
 }
@@ -290,7 +277,7 @@ class UdpListener implements Runnable {
                 dpacket.setLength(buffer.length);
             }
         } catch (IOException e) {
-            System.err.println(String.format("Request aborted: %s", e));
+            System.err.println(String.format("Server aborted: %s", e));
         }
     }
 }
