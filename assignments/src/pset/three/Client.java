@@ -54,13 +54,13 @@ public class Client {
             String response = "";
             try {
                 if (udp) {   
-					response = sendUdp(message, udpPort);	
+                    response = sendUdp(message, udpPort);	
                 } else {
                     response = sendTcp(message, tcpPort);
                 }
             } catch (IOException e) {
-				e.printStackTrace();
-			}
+                e.printStackTrace();
+            }
             System.out.println(response);
         }
     }
