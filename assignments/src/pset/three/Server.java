@@ -197,7 +197,7 @@ class Handler implements Runnable {
                 response = Server.list(args[0]);
             }
             /* else: raise custom exception */
-            respond(response);
+            respond(String.format("%s\n", response));
         } catch (IOException e) {
             System.err.println(String.format("Request aborted: %s", e));
         }
