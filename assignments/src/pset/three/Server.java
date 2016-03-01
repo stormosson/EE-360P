@@ -45,27 +45,22 @@ public class Server {
         Scanner scan = new Scanner(filename);
         while (scan.hasNextLine()) {
             String[] line = scan.nextLine().split("\\s+");
-            if (line.length != 2) {
+            if (line.length != 2)
                 continue;
-            }
-            /* TODO: document assumption that we are adding discrete but
-             * matching inventory items */
+            /* Assume: nonmatching inventory lines refer to different items */
             String item = line[0];
             Integer quantity = Integer.valueOf(line[1]);
-            if (inventory.containsKey(item)) {
-                inventory.put(item, inventory.get(item) + quantity);
-            } else {
-                inventory.put(item, quantity);
-            }
+            inventory.put(item, quantity + (inventory.containsKey(item) ? 
+                                            inventory.get(item) : 0));
         }
 
         /* Run -- accept incoming requests */
-        UdpListener udpListener = new UdpListener(udpPort);
-        TcpListener tcpListener = new TcpListener(tcpPort);
-        Thread u = new Thread(udpListener);
-        Thread t = new Thread(tcpListener);
+        Thread u = new Thread(new UdpListener(udpPort));
+        Thread t = new Thread(new TcpListener(tcpPort));
         u.start();
         t.start();
+        u.join();
+        t.join();
     }
 
     public static void respond(String tu, String response) {
@@ -141,6 +136,7 @@ public class Server {
     }
 
     /* Assume: canceled orders should still be listed */
+    /* Assume: username exists */
     public synchronized static void search(String username, String tu) {
 
         if (!user_orders.containsKey(username)) {
@@ -166,48 +162,47 @@ public class Server {
 
     private static void printMap(Map<String, Integer> map) {
         System.out.print("{");
-        for (String item : map.keySet()) {
-            System.out.print("<" + item + "," + map.get(item) + ">, ");
-        }
+        for (String item : map.keySet())
+            System.out.print(String.format("<%s,%s> ", item, map.get(item)));
         System.out.println("}");
     }
 }
 
-class UdpListener implements Runnable {
-    Server server;
-    ServerSocket listener;
-    int port;
+class Handler implements Runnable {
 
-    UdpListener(int port) {
-        server = new Server();
-        this.port = port;
+    String[] command;
+
+    UdpHandler(String command) {
+        this.command = command.split("\\s+", 2);
     }
 
     @Override
     public void run() {
-
         try {
-            listener = new ServerSocket(port);
-            while (true) {
-                Socket theClient = listener.accept();
-                UdpHandler udpHandler = new UdpHandler(theClient, server);
-                Thread t = new Thread(udpHandler);
-                t.start();
+            if (this.command.equals("purchase")) {
+                Server.purchase(command[1].split())
             }
-
+            else if (this.command.equals("cancel")) {
+                Server.cancel(command[1].split())
+            }
+            else if (this.command.equals("search")) {
+                Server.search(command[1].split())
+            }
+            else if (this.command.equals("list")) {
+                Server.list(command[1].split())
+            }
+            /* else: raise custom exception */
         } catch (IOException e) {
-            System.err.println("Server aborted: " + e);
+            System.err.println(String.format("Request aborted: %s", e));
         }
     }
 }
 
 class TcpListener implements Runnable {
-    Server server;
-    ServerSocket listener;
+    
     int port;
 
     TcpListener(int port) {
-        server = new Server();
         this.port = port;
     }
 
@@ -215,62 +210,43 @@ class TcpListener implements Runnable {
     public void run() {
 
         try {
-            listener = new ServerSocket(port);
+            ServerSocket ssocket = new ServerSocket(port);
             while (true) {
-                Socket theClient = listener.accept();
-                TcpHandler tcpHandler = new TcpHandler(theClient, server);
-                Thread t = new Thread(tcpHandler);
-                t.start();
+                Socket dsocket = ssocket.accept();
+                InputStreamReader stdin = 
+                    new InputStreamReader(dsocket.getInputStream());
+                BufferedReader reader = new BufferedReader(stdin);
+                new Thread(new Handler(reader.readLine())).start();
             }
-
         } catch (IOException e) {
             System.err.println("Server aborted: " + e);
         }
     }
 }
 
-class TcpHandler implements Runnable {
-    Server server;
-    Socket theClient;
+class UdpListener implements Runnable {
 
-    TcpHandler(Socket theClient, Server server) {
-        this.theClient = theClient;
+    int port;
+    byte[] buffer = new byte[2048];
+
+    UdpListener(int port) {
+        this.port = port;
     }
 
     @Override
     public void run() {
+
         try {
-            handle();
-            theClient.close();
+            DatagramSocket dsocket = new DatagramSocket(port);
+            DatagramPacket dpacket = new DatagramPacket(buffer, buffer.length);
+            while (true) {
+                dsocket.receive(packet);
+                String command = new String(buffer, 0, packet.getLength());
+                new Thread(new Handler(command)).start();
+                packet.setLength(buffer.length);
+            }
         } catch (IOException e) {
-            System.err.println("Request aborted: " + e);
+            System.err.println(String.format("Request aborted: %s", e));
         }
-    }
-
-    private void handle() throws IOException {
-        // TODO parse input and call correct command
-    }
-}
-
-class UdpHandler implements Runnable {
-    Server server;
-    Socket theClient;
-
-    UdpHandler(Socket theClient, Server server) {
-        this.theClient = theClient;
-    }
-
-    @Override
-    public void run() {
-        try {
-            handle();
-            theClient.close();
-        } catch (IOException e) {
-            System.err.println("Request aborted: " + e);
-        }
-    }
-
-    private void handle() throws IOException {
-        // TODO parse input and call correct command
     }
 }
