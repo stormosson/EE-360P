@@ -253,6 +253,7 @@ class TcpListener implements Runnable {
                     new InputStreamReader(dsocket.getInputStream());
                 BufferedReader reader = new BufferedReader(stdin);
                 String cmd = reader.readLine();
+                System.out.println("HEY LOOK AT THIS: " + cmd);
                 new Thread(new Handler(cmd, false, dsocket, null, 
                                        dsocket.getInetAddress(), 
                                        dsocket.getPort())).start();
