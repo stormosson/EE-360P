@@ -1,5 +1,7 @@
-purchase jabroni xbox 6 T
-purchase dillJacobsen ps4 6 T
+purchase jabroni poop 800 T
+purchase dillJacobsen xbox 1 T
+cancel 1 T
+purchase dillJacobsen xbox 1 T
 list T
 search jabroni U
 search jabroni T

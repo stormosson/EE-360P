@@ -4,7 +4,6 @@ import java.util.Scanner;
 
 import java.net.*;
 import java.io.*;
-import java.util.Arrays;
 import java.util.ArrayList;
 
 import java.util.Map;
@@ -16,7 +15,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Server {
 
     private static int order_nonce = 1;
-    private static int[] ports;
     private static Map<String, Integer> inventory = null;
     private static Map<Integer, String> ledger = null;
     private static Map<String, ArrayList<String>> user_orders = null;
@@ -38,7 +36,6 @@ public class Server {
 
         tcpPort = Integer.parseInt(args[0]);
         udpPort = Integer.parseInt(args[1]);
-        ports = new int[] { tcpPort, udpPort };
         String filename = args[2];
 
         /* Initialize -- parse the inventory file */
@@ -165,7 +162,8 @@ public class Server {
 
     /** Print a Map object to stdout.
      */
-    private static void printMap(Map<String, Integer> map) {
+    @SuppressWarnings("unused")
+	private static void printMap(Map<String, Integer> map) {
         System.out.print("{");
         for (String item : map.keySet())
             System.out.print(String.format("<%s,%s> ", item, map.get(item)));
@@ -271,8 +269,8 @@ class TcpListener implements Runnable {
                 Socket dsocket = ssocket.accept();
                 DataInputStream stdin = 
                     new DataInputStream(dsocket.getInputStream());
-                DataOutputStream reader = 
-                    new DataOutputStream(dsocket.getOutputStream());
+               // DataOutputStream reader = 
+                 //   new DataOutputStream(dsocket.getOutputStream());
                 String cmd = stdin.readUTF();
                 new Thread(new Handler(cmd, false, dsocket, null, 
                                        dsocket.getInetAddress(), 

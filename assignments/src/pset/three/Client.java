@@ -13,7 +13,6 @@ public class Client {
 
     /** Start a client based on given command line arguments.
      */
-    @SuppressWarnings("resource")
     public static void main (String[] args) {
 
         String hostAddress;
@@ -68,7 +67,7 @@ public class Client {
                     response = sendTcp(message, hostAddress, tcpPort);
                 }
             } catch (IOException e) { e.printStackTrace(); }
-            System.out.print(String.format("%s", response));
+            System.out.println(String.format("%s", response));
         }
     }
 
@@ -98,7 +97,8 @@ public class Client {
     public static String sendTcp(String message, String address, int port)
         throws IOException {
       
-        Socket ssocket = new Socket(address, port);
+        @SuppressWarnings("resource")
+		Socket ssocket = new Socket(address, port);
         stdout = new DataOutputStream(ssocket.getOutputStream());
         stdin = new DataInputStream(ssocket.getInputStream());
         stdout.writeUTF(message);
