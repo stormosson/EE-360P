@@ -11,6 +11,8 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/* TODO: javadoc */
+
 public class Server {
 
     private static int order_nonce = 1;
@@ -63,36 +65,17 @@ public class Server {
         t.join();
     }
 
-    public static void respond(String tu, String response) {
-        String protocol = tu.toLowerCase();
-        if (protocol.startsWith("u")) {
-            udpRespond(response);
-        } else if (protocol.startsWith("t")) {
-            tcpRespond(response);
-        }
-    }
-
-    public static void udpRespond(String response) {
-
-    }
-
-    public static void tcpRespond(String response) {
-
-    }
-
     public synchronized static void purchase(String username,
                                              String productname,
                                              String quantity, String tu) {
 
         if (!inventory.containsKey(productname)) {
-            respond(tu, "Not Available - We do not sell this product");
-            return;
+            return "Not Available - We do not sell this product";
         }
         /* We do have productname in our database */
         int stock = inventory.get(productname);
         if (stock - Integer.parseInt(quantity) < 0) {
-            respond(tu, "Not Available - Not enough items");
-            return;
+            return "Not Available - Not enough items";
         }
         /* We do have enough items in stock to complete sale */
         inventory.put(productname, stock - Integer.parseInt(quantity));
@@ -111,16 +94,15 @@ public class Server {
         }
         orders.add(String.format("%s, %s, %s", orderid, productname, quantity));
 
-        respond(tu, String.format("You order has been placed, %s %s %s %s",
-                                  orderid, username, productname, quantity));
+        return String.format("You order has been placed, %s %s %s %s",
+                             orderid, username, productname, quantity);
     }
 
     /* Assume: an order will not be canceled more than once */
-    public synchronized static void cancel(String orderid, String tu) {
+    public synchronized static String cancel(String orderid, String tu) {
 
         if (!ledger.containsKey(orderid)) {
-            respond(tu, String.format("%s not found, no such order", orderid));
-            return;
+            return String.format("%s not found, no such order", orderid);
         }
         /* We recognize the order id, reverse contents of ledger */
         String[] order = ledger.get(orderid).split("\\s+");
@@ -132,7 +114,7 @@ public class Server {
         ledger.remove(orderid);
 
         inventory.put(productname, quantity + inventory.get(productname));
-        respond(tu, String.format("Order %s is canceled", orderid));
+        return String.format("Order %s is canceled", orderid);
     }
 
     /* Assume: canceled orders should still be listed */
@@ -140,15 +122,14 @@ public class Server {
     public synchronized static void search(String username, String tu) {
 
         if (!user_orders.containsKey(username)) {
-            respond(tu, String.format("No order found for %s", username));
-            return;
+            return String.format("No order found for %s", username);
         }
 
         String response = "";
         for (String order : user_orders.get(username)) {
             response += String.format("%s\n", order);
         }
-        respond(tu, response);
+        return response;
     }
 
     public synchronized static void list(String tu) {
@@ -157,7 +138,7 @@ public class Server {
         for (String item : inventory.keySet()) {
             response += String.format("%s %d\n", item, inventory.get(item));
         }
-        respond(tu, response);
+        return response;
     }
 
     private static void printMap(Map<String, Integer> map) {
@@ -171,29 +152,51 @@ public class Server {
 class Handler implements Runnable {
 
     String[] command;
+    boolean udp;
+    InetAddress address;
+    Integer port;
 
-    UdpHandler(String command) {
+    UdpHandler(String command, Socket tcpsocket, DatagramSocket udpsocket, 
+               InetAddress return_address, Integer port) {
         this.command = command.split("\\s+", 2);
+        this.udp = udpsocket == null;
+        this.address = return_address;
+        this.port = port;
     }
 
     @Override
     public void run() {
         try {
+            String response = "";
             if (this.command.equals("purchase")) {
-                Server.purchase(command[1].split())
+                response = Server.purchase(command[1].split())
             }
             else if (this.command.equals("cancel")) {
-                Server.cancel(command[1].split())
+                response = Server.cancel(command[1].split())
             }
             else if (this.command.equals("search")) {
-                Server.search(command[1].split())
+                response = Server.search(command[1].split())
             }
             else if (this.command.equals("list")) {
-                Server.list(command[1].split())
+                response = Server.list(command[1].split())
             }
             /* else: raise custom exception */
+            return response;
         } catch (IOException e) {
             System.err.println(String.format("Request aborted: %s", e));
+        }
+    }
+
+    private void response(String message) {
+        if (udp) {
+            byte[] data = message.getBytes();
+            DatagramPacket packet = new DatagramPacket(data, data.length, 
+                                                       this.address, port);
+            udpsocket.send(packet);
+        } else if (tcp) {
+            DataOutpuStream stdout = 
+                new DataOutputStream(tcpsocket.getOutputStream());
+            stdout.writeBytes(message);
         }
     }
 }
@@ -216,7 +219,9 @@ class TcpListener implements Runnable {
                 InputStreamReader stdin = 
                     new InputStreamReader(dsocket.getInputStream());
                 BufferedReader reader = new BufferedReader(stdin);
-                new Thread(new Handler(reader.readLine())).start();
+                new Thread(new Handler(reader.readLine(), dsocket, null, 
+                                       dsocket.getInetAddress(), 
+                                       dsocket.getPort()).start();
             }
         } catch (IOException e) {
             System.err.println("Server aborted: " + e);
@@ -242,7 +247,9 @@ class UdpListener implements Runnable {
             while (true) {
                 dsocket.receive(packet);
                 String command = new String(buffer, 0, packet.getLength());
-                new Thread(new Handler(command)).start();
+                new Thread(new Handler(command, null, dsocket, 
+                                       dpacket.getAddress(), 
+                                       dpacket.getPort())).start();
                 packet.setLength(buffer.length);
             }
         } catch (IOException e) {
