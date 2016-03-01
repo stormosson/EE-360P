@@ -138,7 +138,7 @@ public class Server {
         for (String order : user_orders.get(username)) {
             response += String.format("%s\n", order);
         }
-        return response.trim();
+        return response;
     }
 
     public synchronized static String list(String tu) {
@@ -147,7 +147,7 @@ public class Server {
         for (String item : inventory.keySet()) {
             response += String.format("%s %d\n", item, inventory.get(item));
         }
-        return response.trim();
+        return response;
     }
 
     private static void printMap(Map<String, Integer> map) {
@@ -199,7 +199,7 @@ class Handler implements Runnable {
                 response = Server.list(args[0]);
             }
             /* else: raise custom exception */
-            respond(String.format("%s\n", response));
+            respond(String.format("%s\n", response.trim()));
         } catch (IOException e) {
             System.err.println(String.format("Request aborted: %s", e));
         }
