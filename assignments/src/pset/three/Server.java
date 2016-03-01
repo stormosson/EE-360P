@@ -115,20 +115,21 @@ public class Server {
      */
     public synchronized static String cancel(String orderid, String tu) {
 
-        if (!ledger.containsKey(orderid)) {
-            return String.format("%s not found, no such order", orderid);
+        Integer ordernum = Integer.parseInt(orderid);
+        if (!ledger.containsKey(ordernum)) {
+            return String.format("%s not found, no such order", ordernum);
         }
         /* We recognize the order id, reverse contents of ledger */
-        String[] order = ledger.get(orderid).split("\\s+");
+        String[] order = ledger.get(ordernum).split("\\s+");
         String productname = order[0];
         Integer quantity = Integer.valueOf(order[1]);
 
         /* Remove the order from the ledger so we cannot 'spawn' infinite items
          * through false returns */
-        ledger.remove(orderid);
+        ledger.remove(ordernum);
 
         inventory.put(productname, quantity + inventory.get(productname));
-        return String.format("Order %s is canceled", orderid);
+        return String.format("Order %s is canceled", ordernum);
     }
 
     /** Handle a search request.
@@ -163,9 +164,9 @@ public class Server {
     /** Print a Map object to stdout.
      */
     @SuppressWarnings("unused")
-	private static void printMap(Map<String, Integer> map) {
+	private static void printMap(Map<Integer, String> map) {
         System.out.print("{");
-        for (String item : map.keySet())
+        for (Integer item : map.keySet())
             System.out.print(String.format("<%s,%s> ", item, map.get(item)));
         System.out.println("}");
     }
