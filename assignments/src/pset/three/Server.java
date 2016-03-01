@@ -5,8 +5,11 @@ import java.util.Scanner;
 import java.util.Arrays;
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
@@ -50,7 +53,12 @@ public class Server {
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
 
-        Scanner scan = new Scanner(filename);
+        Scanner scan = null;
+		try {
+			scan = new Scanner(new File(filename));
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
         while (scan.hasNextLine()) {
             String[] line = scan.nextLine().split("\\s+");
             if (line.length != 2)
@@ -63,6 +71,7 @@ public class Server {
         }
 
         /* Run -- accept incoming requests */
+        //printMap(inventory);
         Thread u = new Thread(new UdpListener(udpPort));
         Thread t = new Thread(new TcpListener(tcpPort));
         u.start();
@@ -79,7 +88,8 @@ public class Server {
                                                String productname,
                                                String quantity, String tu) {
 
-        if (!inventory.containsKey(productname)) {
+        System.out.println("shit we got: " + String.format("%s, %s, %s", username, productname, quantity));
+    	if (!inventory.containsKey(productname)) {
             return "Not Available - We do not sell this product";
         }
         /* We do have productname in our database */
@@ -168,10 +178,11 @@ class Handler implements Runnable {
     Socket tcpsocket;
     DatagramSocket udpsocket;
 
-    public Handler(String command, Socket tcpsocket, DatagramSocket udpsocket, 
-               InetAddress return_address, Integer port) {
+    public Handler(String command, boolean udp, Socket tcpsocket,
+    		   DatagramSocket udpsocket, InetAddress return_address,
+    		   Integer port) {
         this.command = command.split("\\s+", 2);
-        this.udp = udpsocket == null;
+        this.udp = udp;
         this.address = return_address;
         this.port = port;
         this.tcpsocket = tcpsocket;
@@ -183,7 +194,7 @@ class Handler implements Runnable {
         try {
             String response = "";
             String[] args = command[1].split("\\s+");
-            /* fuck you java this is so stupid. give me a splat operator! */
+            
             if (this.command.equals("purchase")) {
                 response = Server.purchase(args[0], args[1], args[2], args[3]);
             }
@@ -204,15 +215,18 @@ class Handler implements Runnable {
     }
 
     private void respond(String message) throws IOException {
+    	System.out.println(message);
         if (udp) {
             byte[] data = message.getBytes();
             DatagramPacket packet = new DatagramPacket(data, data.length, 
                                                        this.address, this.port);
             this.udpsocket.send(packet);
         } else {
-            DataOutputStream stdout = 
-                new DataOutputStream(tcpsocket.getOutputStream());
-            stdout.writeBytes(message);
+        	System.out.println("This server's port is " + this.port + ".");
+            PrintWriter stdout = 
+                new PrintWriter(this.tcpsocket.getOutputStream(), true);
+            stdout.print(message);
+            stdout.flush();
         }
     }
 }
@@ -220,22 +234,26 @@ class Handler implements Runnable {
 class TcpListener implements Runnable {
     
     int port;
+    ServerSocket ssocket;
 
-    TcpListener(int port) {
+    TcpListener(int port){
         this.port = port;
+        try{
+        	ssocket = new ServerSocket(port);
+        }catch(IOException e){}
     }
-
     @Override
     public void run() {
-
-        try {
-            ServerSocket ssocket = new ServerSocket(port);
+        try { 
             while (true) {
+            	System.out.println("This server's port is " + this.port + ".");
                 Socket dsocket = ssocket.accept();
+                System.out.println("Connection to " + dsocket.getRemoteSocketAddress() + " established.");
                 InputStreamReader stdin = 
                     new InputStreamReader(dsocket.getInputStream());
                 BufferedReader reader = new BufferedReader(stdin);
-                new Thread(new Handler(reader.readLine(), dsocket, null, 
+                String cmd = reader.readLine();
+                new Thread(new Handler(cmd, false, dsocket, null, 
                                        dsocket.getInetAddress(), 
                                        dsocket.getPort())).start();
             }
@@ -263,7 +281,7 @@ class UdpListener implements Runnable {
             while (true) {
                 dsocket.receive(dpacket);
                 String command = new String(buffer, 0, dpacket.getLength());
-                new Thread(new Handler(command, null, dsocket, 
+                new Thread(new Handler(command, true, null, dsocket, 
                                        dpacket.getAddress(), 
                                        dpacket.getPort())).start();
                 dpacket.setLength(buffer.length);
