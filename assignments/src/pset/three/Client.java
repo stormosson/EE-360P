@@ -50,7 +50,7 @@ public class Client {
             } else {
                 response = sendTcp(message, tcpPort);
             }
-            /* TODO: do something with response? */
+            System.out.println(response);
         }
     }
 
