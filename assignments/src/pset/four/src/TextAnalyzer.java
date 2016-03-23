@@ -80,8 +80,7 @@ public class TextAnalyzer extends Configured implements Tool {
 		Configuration conf = this.getConf();
 
 		// Create job
-		/* TODO: faggot didn't put a todo what was he thinking */
-		Job job = new Job(conf, "EID1_EID2"); // Replace with your EIDs
+		Job job = new Job(conf, "esc625_wsm443"); // Replace with your EIDs
 		job.setJarByClass(TextAnalyzer.class);
 
 		// Setup MapReduce job
@@ -117,9 +116,4 @@ public class TextAnalyzer extends Configured implements Tool {
 		int res = ToolRunner.run(new Configuration(), new TextAnalyzer(), args);
 		System.exit(res);
 	}
-
-	// You may define sub-classes here. Example:
-	// public static class MyClass {
-	//
-	// }
 }
