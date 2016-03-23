@@ -57,27 +57,24 @@ public class TextAnalyzer extends Configured implements Tool {
 
 	// Replace "?" with your own input key / value types, i.e., the output
 	// key / value types of your mapper function
-	public static class TextReducer extends Reducer<Text, HashMap<Text, LongWritable>, Text, Text> {
-		private final static Text emptyText = new Text("");
+    public static class TextReducer extends Reducer<Text, HashMap<Text, LongWritable>, Text, Text> {
+        private final static Text emptyText = new Text("");
 
-		public void reduce(Text key, HashMap<Text, LongWritable> queryHash, Context context)
-				throws IOException, InterruptedException {
-			// Implementation of you reducer function
+        public void reduce(Text key, HashMap<Text, LongWritable> queryHash, Context context)
+            throws IOException, InterruptedException {
 
-			// Write out the results; you may change the following example
-			// code to fit with your reducer function.
-			// Write out the current context key
-			context.write(key, emptyText);
-			// Write out query words and their count
-			for (String queryWord : map.keySet()) {
-				String count = map.get(queryWord).toString() + ">";
-				queryWordText.set("<" + queryWord + ",");
-				context.write(queryWordText, new Text(count));
-			}
-			// Empty line for ending the current context key
-			context.write(emptyText, emptyText);
-		}
-	}
+            // Write out the current context key
+            context.write(key, emptyText);
+            // Write out query words and their count
+            for (String queryWord : map.keySet()) {
+                String count = map.get(queryWord).toString() + ">";
+                queryWordText.set("<" + queryWord + ",");
+                context.write(queryWordText, new Text(count));
+            }
+            // Empty line for ending the current context key
+            context.write(emptyText, emptyText);
+        }
+    }
 
 	public int run(String[] args) throws Exception {
 		Configuration conf = this.getConf();
