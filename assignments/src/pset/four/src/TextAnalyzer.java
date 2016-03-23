@@ -18,7 +18,7 @@ public class TextAnalyzer extends Configured implements Tool {
     // Replace "?" with your own output key / value types
     // The four template data types are:
     // <Input Key Type, Input Value Type, Output Key Type, Output Value Type>
-    public static class TextMapper extends Mapper<LongWritable, Text, Text, HashMap<LongWritable>> {
+    public static class TextMapper extends Mapper<LongWritable, Text, Text, HashMap<Text, LongWritable>> {
 
         public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 
@@ -49,7 +49,7 @@ public class TextAnalyzer extends Configured implements Tool {
                     }
                 }
             }
-            for (context : hash.keys()) {
+            for (context : hash.keySet()) {
                 context.write(context, hash.get(context));
             }
         }
@@ -65,10 +65,10 @@ public class TextAnalyzer extends Configured implements Tool {
 
 	// Replace "?" with your own input key / value types, i.e., the output
 	// key / value types of your mapper function
-	public static class TextReducer extends Reducer<?, ?, Text, Text> {
+	public static class TextReducer extends Reducer<Text, HashMap<Text, LongWritable>, Text, Text> {
 		private final static Text emptyText = new Text("");
 
-		public void reduce(Text key, Iterable<Tuple> queryTuples, Context context)
+		public void reduce(Text key, HashMap<Text, LongWritable> queryHash, Context context)
 				throws IOException, InterruptedException {
 			// Implementation of you reducer function
 
