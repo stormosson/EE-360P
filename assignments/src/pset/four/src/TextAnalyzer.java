@@ -55,14 +55,6 @@ public class TextAnalyzer extends Configured implements Tool {
         }
     }
 
-	/*
-	 * // Replace "?" with your own key / value types // NOTE: combiner's output
-	 * key / value types have to be the same as those of mapper public static
-	 * class TextCombiner extends Reducer<?, ?, ?, ?> { public void reduce(Text
-	 * key, Iterable<Tuple> tuples, Context context) throws IOException,
-	 * InterruptedException { // Implementation of you combiner function } }
-	 */
-
 	// Replace "?" with your own input key / value types, i.e., the output
 	// key / value types of your mapper function
 	public static class TextReducer extends Reducer<?, ?, Text, Text> {
