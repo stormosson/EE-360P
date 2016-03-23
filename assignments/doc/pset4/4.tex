@@ -1,0 +1,95 @@
+\documentclass[11pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+\usepackage{fixltx2e}
+\usepackage{longtable}
+\usepackage{float}
+\usepackage{array}
+\usepackage{multirow}
+\usepackage{multicol}
+\usepackage{wrapfig}
+\usepackage{rotating}
+\usepackage[normalem]{ulem}
+\usepackage{textcomp}
+\usepackage{marvosym}
+\usepackage{wasysym}
+\usepackage{hyperref}
+\tolerance=1000
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage[margin=0.75in]{geometry}
+\usepackage{enumerate}
+\usepackage{showexpl}
+\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}
+\newcommand{\todo}{{\LARGE \emph{\color{red}TODO}}}
+\hypersetup{
+  pdfkeywords={},
+  pdfsubject={}}
+\newcounter{problem}
+\newcounter{solution}
+\usepackage{beramono}
+\usepackage{listings}
+\usepackage[usenames,dvipsnames]{xcolor}
+\usepackage[T1]{fontenc}
+\usepackage{inconsolata}
+\usepackage{color}
+\definecolor{pblue}{rgb}{0.13,0.13,1}
+\definecolor{pgreen}{rgb}{0,0.5,0}
+\definecolor{pred}{rgb}{0.9,0,0}
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
+\lstset{language=Java,
+  showspaces=false,
+  showtabs=false,
+  breaklines=true,
+  showstringspaces=false,
+  breakatwhitespace=true,
+  commentstyle=\color{pgreen},
+  keywordstyle=\color{pblue},
+  stringstyle=\color{pred},
+  basicstyle=\ttfamily,
+  moredelim=[il][\textcolor{pgrey}]{$$},
+  moredelim=[is][\textcolor{pgrey}]{\%\%}{\%\%}
+}
+% \parindent 0in
+% \parskip 1em.
+\begin{document}
+\title{EE 360P:\@Concurrent and Distributed Systems \\ Assignment 4}
+\author{Student: Eric Crosson (email: eric.s.crosson@utexas.edu)\\
+  Student: William ``Stormy'' Mauldin (email: stormymauldin@utexas.edu)}
+\date{\today}
+\maketitle
+
+\begin{enumerate}
+\item \textbf{(20 points)} 
+\begin{enumerate}[(a)]
+\item Extend Lamport's mutex algorithm to solve $k$-mutual exclusion problem which allows at most $k$ processes to be in the critical section concurrently.
+
+\begin{itemize}
+\item \italicize{Notes}: Each process has a counter, initialized to the number of processes.
+\item To request the critical section, a process sends a timestamped message to all other processes and adds a timestamped request to the queue.
+\item On receiving a request message, the request and its timestamp are stored in the queue and a timestamped acknowledgement is sent back.
+\item To release the critical section, a process' counter is incremented and it sends a release message to all other processes.
+\item On receiving a release message, the corresponding request is deleted from the queue and increment their counter. NOTE: I AM AWARE OF THE AMBIGUITY OF "COUNTER" HERE, BUT HAVE NOT MODIFIED YET
+\item A process determines that it can access the critical section if and only if all of the following are true: 
+\begin{itemize}
+\item It has a request in the queue with timestamp $t$
+\item $t$ is less than all other requests in the queue
+\item It has received a message from every other process with timestamp greater than $t$.
+\end{itemize}
+Immediately before entering the critical section, the process decrements its counter.
+\end{itemize}
+
+
+\item Extend Ricart and Agrawala's mutex algorithm to solve the $k$-mutual exclusion problem.   
+
+General idea: condition on entering CS: $k - count \leq t \leq (k - count) + num$
+
+\end{enumerate}
+\end{enumerate}
+\end{document}
