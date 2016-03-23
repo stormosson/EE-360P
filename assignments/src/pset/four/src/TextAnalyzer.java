@@ -21,7 +21,7 @@ public class TextAnalyzer extends Configured implements Tool {
 	public static class TextMapper extends Mapper<LongWritable, Text, Text, HashMap<LongWritable>> {
 		private final static IntWritable one = new IntWritable(1);
 		private Text contextWord = new Text();
-		privaate Text queryWord = new Text();
+		private Text queryWord = new Text();
 
 		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
 			StringTokenizer itr0 = new StringTokenizer(value.toString());
