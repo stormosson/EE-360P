@@ -15,27 +15,45 @@ import java.util.StringTokenizer;
 // Do not change the signature of this class
 public class TextAnalyzer extends Configured implements Tool {
 
-	// Replace "?" with your own output key / value types
-	// The four template data types are:
-	// <Input Key Type, Input Value Type, Output Key Type, Output Value Type>
-	public static class TextMapper extends Mapper<LongWritable, Text, Text, HashMap<LongWritable>> {
-		private final static IntWritable one = new IntWritable(1);
-		private Text contextWord = new Text();
-		private Text queryWord = new Text();
+    // Replace "?" with your own output key / value types
+    // The four template data types are:
+    // <Input Key Type, Input Value Type, Output Key Type, Output Value Type>
+    public static class TextMapper extends Mapper<LongWritable, Text, Text, HashMap<LongWritable>> {
 
-		public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-			StringTokenizer itr0 = new StringTokenizer(value.toString());
-			while (itr0.hasMoreTokens()) {
-				StringTokenizer itr1 = new StringTokenizer(value.toString());
-				itr1.nextToken();
-				contextWord.set(itr0.nextToken());
-				while(itr1.hasMoreTokens()){
-					queryWord.set(itr1.nextToken());
-					context.write(queryWord, one);
-				}
-			}
-		}
-	}
+        public void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
+
+            private final static LongWritable one = new LongWritable(1);
+            private Text contextWord = new Text();
+            private Text queryWord = new Text();
+            StringTokenizer context_itr = new StringTokenizer(value.toString());
+            /* context word, query word, count */
+            HashMap<Text, HashMap<Text, LongWritable>> hash = 
+                new HashMap<Text, HashMap<Text, LongWritable>>();
+
+            while (context_itr.hasMoreTokens()) {
+                contextWord.set(context_itr.nextToken());
+
+                StringTokenizer query_itr = new StringTokenizer(value.toString());
+                while (context_itr.countTokens() >= query_itr.countTokens()) {
+                    query_itr.nextToken();  /* burn a word */
+                }
+                while(query_itr.hasMoreTokens()){
+                    queryWord.set(query_itr.nextToken());
+                    if (hash[contextWord] == null) {
+                        hash[contextWord] = new HashMap<Text, LongWritable>();
+                    }
+                    if (hash[contextWord][queryWord] == null) {
+                        hash[contextWord][queryWord] = one;
+                    } else {
+                        hash[contextWord][queryWord] += 1;
+                    }
+                }
+            }
+            for (context : hash.keys()) {
+                context.write(context, hash.get(context));
+            }
+        }
+    }
 
 	/*
 	 * // Replace "?" with your own key / value types // NOTE: combiner's output
