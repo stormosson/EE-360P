@@ -109,19 +109,13 @@ Student: William ``Stormy'' Mauldin (email: stormymauldin@utexas.edu)}
       value. Otherwise, that process is kept in a pending queue.
     \item To release a resource, the process increments $c$ and sends
       \emph{okay} to all the process in the pending queue.
-    \item The process in the queue with timestamp $t$ is granted the resource
-      when all of the it has requested the resource and all of the following are
-      true:
-      \begin{itemize}                                                 
-      \item $(k-c)\leq t \leq(k-c+n)$, where $n$ = number of processes that
-        responded to the \emph{request}
-      \item it has received the \emph{okay} message from every other process in
-        response to its \emph{request} message
-      \item $c$ > 0
-      \end{itemize}
-      Immediately before entering the critical section, the process decrements
-      $c$.
-    \end{itemize}
+    \item The process in the queue requesting $t$ permits is granted the resource when all of the it has requested the resource and all of the following are true:
+    \begin{itemize}                                                 
+    \item $(k-c)\leq t \leq(k-c+n)$, where $n$ = number of processes that responded to the \emph{request}
+    \item $c$ > 0                                                   
+    \end{itemize}                                                   
+    Immediately before entering the critical section, the process decrements $c$.
+    \end{itemize} 
 
   \end{enumerate}                                                 
 \end{enumerate}                                                 
