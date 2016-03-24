@@ -71,7 +71,7 @@
 \item Extend Lamport's mutex algorithm to solve $k$-mutual exclusion problem which allows at most $k$ processes to be in the critical section concurrently.
 
 \begin{itemize}
-\item \italicize{Notes}: Each process has a counter, initialized to the number of processes.
+\item \emph{Notes}: Each process has a counter, initialized to the number of processes.
 \item To request the critical section, a process sends a timestamped message to all other processes and adds a timestamped request to the queue.
 \item On receiving a request message, the request and its timestamp are stored in the queue and a timestamped acknowledgement is sent back.
 \item To release the critical section, a process' counter is incremented and it sends a release message to all other processes.
