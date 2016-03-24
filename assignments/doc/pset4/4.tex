@@ -1,106 +1,107 @@
-\documentclass[11pt]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage{amsmath}
-\usepackage{amssymb}
-\usepackage{amsthm}
-\usepackage{mathtools}
-\usepackage{fixltx2e}
-\usepackage{longtable}
-\usepackage{float}
-\usepackage{array}
-\usepackage{multirow}
-\usepackage{multicol}
-\usepackage{wrapfig}
-\usepackage{rotating}
-\usepackage[normalem]{ulem}
-\usepackage{textcomp}
-\usepackage{marvosym}
-\usepackage{wasysym}
-\usepackage{hyperref}
-\tolerance=1000
-\usepackage{caption}
-\usepackage{subcaption}
-\usepackage[margin=0.75in]{geometry}
-\usepackage{enumerate}
-\usepackage{showexpl}
-\usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
-\definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
-\definecolor{mylilas}{RGB}{170,55,241}
-\newcommand{\todo}{{\LARGE \emph{\color{red}TODO}}}
-\hypersetup{
-  pdfkeywords={},
-  pdfsubject={}}
-\newcounter{problem}
-\newcounter{solution}
-\usepackage{beramono}
-\usepackage{listings}
-\usepackage[usenames,dvipsnames]{xcolor}
-\usepackage[T1]{fontenc}
-\usepackage{inconsolata}
-\usepackage{color}
-\definecolor{pblue}{rgb}{0.13,0.13,1}
-\definecolor{pgreen}{rgb}{0,0.5,0}
-\definecolor{pred}{rgb}{0.9,0,0}
-\definecolor{pgrey}{rgb}{0.46,0.45,0.48}
-\lstset{language=Java,
-  showspaces=false,
-  showtabs=false,
-  breaklines=true,
-  showstringspaces=false,
-  breakatwhitespace=true,
-  commentstyle=\color{pgreen},
-  keywordstyle=\color{pblue},
-  stringstyle=\color{pred},
-  basicstyle=\ttfamily,
-  moredelim=[il][\textcolor{pgrey}]{$$},
-  moredelim=[is][\textcolor{pgrey}]{\%\%}{\%\%}
-}
+\documentclass[11pt]{article}                                   
+\usepackage[utf8]{inputenc}                                     
+\usepackage[T1]{fontenc}                                        
+\usepackage{amsmath}                                            
+\usepackage{amssymb}                                            
+\usepackage{amsthm}                                             
+\usepackage{mathtools}                                          
+\usepackage{fixltx2e}                                           
+\usepackage{longtable}                                          
+\usepackage{float}                                              
+\usepackage{array}                                              
+\usepackage{multirow}                                           
+\usepackage{multicol}                                           
+\usepackage{wrapfig}                                            
+\usepackage{rotating}                                           
+\usepackage[normalem]{ulem}                                     
+\usepackage{textcomp}                                           
+\usepackage{marvosym}                                           
+\usepackage{wasysym}                                            
+\usepackage{hyperref}                                           
+\tolerance=1000                                                 
+\usepackage{caption}                                            
+\usepackage{subcaption}                                         
+\usepackage[margin=0.75in]{geometry}                            
+\usepackage{enumerate}                                          
+\usepackage{showexpl}                                           
+\usepackage{color}                                              %red, green, blue, yellow, cyan, magenta, black, white
+\definecolor{mygreen}{RGB}{28,172,0}                            % color values Red, Green, Blue
+\definecolor{mylilas}{RGB}{170,55,241}                          
+\newcommand{\todo}{{\LARGE \emph{\color{red}TODO}}}             
+\hypersetup{                                                    
+pdfkeywords={},                                                 
+pdfsubject={}}                                                  
+\newcounter{problem}                                            
+\newcounter{solution}                                           
+\usepackage{beramono}                                           
+\usepackage{listings}                                           
+\usepackage[usenames,dvipsnames]{xcolor}                        
+\usepackage[T1]{fontenc}                                        
+\usepackage{inconsolata}                                        
+\usepackage{color}                                              
+\definecolor{pblue}{rgb}{0.13,0.13,1}                           
+\definecolor{pgreen}{rgb}{0,0.5,0}                              
+\definecolor{pred}{rgb}{0.9,0,0}                                
+\definecolor{pgrey}{rgb}{0.46,0.45,0.48}                        
+\lstset{language=Java,                                          
+showspaces=false,                                               
+showtabs=false,                                                 
+breaklines=true,                                                
+showstringspaces=false,                                         
+breakatwhitespace=true,                                         
+commentstyle=\color{pgreen},                                    
+keywordstyle=\color{pblue},                                     
+stringstyle=\color{pred},                                       
+basicstyle=\ttfamily,                                           
+moredelim=[il][\textcolor{pgrey}]{$$},                          
+moredelim=[is][\textcolor{pgrey}]{\%\%}{\%\%}                   
+}                                                               
 % \parindent 0in
 % \parskip 1em.
-\begin{document}
-\title{EE 360P:\@Concurrent and Distributed Systems \\ Assignment 4}
-\author{Student: Eric Crosson (email: eric.s.crosson@utexas.edu)\\
-  Student: William ``Stormy'' Mauldin (email: stormymauldin@utexas.edu)}
-\date{\today}
-\maketitle
+\begin{document}                                                
+\title{EE 360P:\@Concurrent and Distributed Systems\\ Assignment 4}
+\author{Student: Eric Crosson (email: eric.s.crosson@utexas.edu) \\
+Student: William ``Stormy'' Mauldin (email: stormymauldin@utexas.edu)}
+\date{\today}                                                   
+\maketitle                                                      
 
-\begin{enumerate}
-\item \textbf{(20 points)} 
-\begin{enumerate}[(a)]
+\begin{enumerate}                                               
+\item \textbf{(20 points)}                                      
+\begin{enumerate}[(a)]                                          
 \item Extend Lamport's mutex algorithm to solve $k$-mutual exclusion problem which allows at most $k$ processes to be in the critical section concurrently.
 
-\begin{itemize}
+\begin{itemize}                                                 
 \item \emph{Notes}: Each process keeps track of a counter $c$, representing the number of processes still allowed to enter the critical section, initialized to $k$.
 \item To request the critical section, a process sends a timestamped message to all other processes and adds a timestamped request to the queue.
 \item On receiving a request message, the request and its timestamp are stored in the queue and a timestamped acknowledgement is sent back.
 \item To release the critical section, the process increments $c$ and sends a release message to all other processes.
 \item On receiving a release message, the corresponding request is deleted from the queue.
-\item A process determines that it can access the critical section if and only if all of the following are true: 
-\begin{itemize}
-\item It has a request at the head of the queue
+\item A process determines that it can access the critical section if and only if all of the following are true:
+\begin{itemize}                                                 
+\item It has a request at the head of the queue                 
 \item It has received a message from every other queued process.
-\item $c > 0$
-\end{itemize}
+\item $c > 0$                                                   
+\end{itemize}                                                   
 Immediately before entering the critical section, the process decrements $c$
-\end{itemize}
+\end{itemize}                                                   
 
 
-\item Extend Ricart and Agrawala's mutex algorithm to solve the $k$-mutual exclusion problem.   
+\item Extend Ricart and Agrawala's mutex algorithm to solve the $k$-mutual exclusion problem.
 
-\begin{itemize}
+\begin{itemize}                                                 
 \item \emph{Notes}: Each process keeps track of a counter $c$, representing the number of processes still allowed to enter the critical section, initialized to $k$.
 \item To request a resource, the process sends a timestamped message to all processes.
 \item On receiving a request from any other process, the process sends an \emph{okay} message if either the process is not interested in the critical section or its own request has a higher timestamp value. Otherwise, that process is kept in a pending queue.
 \item To release a resource, the process increments $c$ and sends \emph{okay} to all the process in the pending queue.
-\item The process is granted the resource when all of the it has requested the resource and all of the following are true: 
-\begin{itemize}
+\item The process in the queue with timestamp $t$ is granted the resource when all of the it has requested the resource and all of the following are true:
+\begin{itemize}                                                 
+\item $(k-c)\leq t \leq(k-c+n)$, where $n$ = number of processes that responded to the \emph{request}
 \item it has received the \emph{okay} message from every other process in response to its \emph{request} message
-\item $c$ > 0
-\end{itemize}
+\item $c$ > 0                                                   
+\end{itemize}                                                   
 Immediately before entering the critical section, the process decrements $c$.
-\end{itemize}
+\end{itemize}                                                   
 
-\end{enumerate}
-\end{enumerate}
-\end{document}
+\end{enumerate}                                                 
+\end{enumerate}                                                 
+\end{document}                                                  
