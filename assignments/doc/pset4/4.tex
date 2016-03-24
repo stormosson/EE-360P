@@ -71,24 +71,35 @@
 \item Extend Lamport's mutex algorithm to solve $k$-mutual exclusion problem which allows at most $k$ processes to be in the critical section concurrently.
 
 \begin{itemize}
-\item \emph{Notes}: Each process has a counter, initialized to the number of processes.
+\item \emph{Notes}: Each process keeps track of a counter $c$, representing the number of processes still allowed to enter the critical section, initialized to $k$.
 \item To request the critical section, a process sends a timestamped message to all other processes and adds a timestamped request to the queue.
 \item On receiving a request message, the request and its timestamp are stored in the queue and a timestamped acknowledgement is sent back.
-\item To release the critical section, a process' counter is incremented and it sends a release message to all other processes.
-\item On receiving a release message, the corresponding request is deleted from the queue and increment their counter. NOTE: I AM AWARE OF THE AMBIGUITY OF "COUNTER" HERE, BUT HAVE NOT MODIFIED YET
+\item To release the critical section, the process increments $c$ and sends a release message to all other processes.
+\item On receiving a release message, the corresponding request is deleted from the queue.
 \item A process determines that it can access the critical section if and only if all of the following are true: 
 \begin{itemize}
-\item It has a request in the queue with timestamp $t$
-\item $t$ is less than all other requests in the queue
-\item It has received a message from every other process with timestamp greater than $t$.
+\item It has a request at the head of the queue
+\item It has received a message from every other queued process.
+\item $c > 0$
 \end{itemize}
-Immediately before entering the critical section, the process decrements its counter.
+Immediately before entering the critical section, the process decrements $c$
 \end{itemize}
 
 
 \item Extend Ricart and Agrawala's mutex algorithm to solve the $k$-mutual exclusion problem.   
 
-General idea: condition on entering CS: $k - count \leq t \leq (k - count) + num$
+\begin{itemize}
+\item \emph{Notes}: Each process keeps track of a counter $c$, representing the number of processes still allowed to enter the critical section, initialized to $k$.
+\item To request a resource, the process sends a timestamped message to all processes.
+\item On receiving a request from any other process, the process sends an \emph{okay} message if either the process is not interested in the critical section or its own request has a higher timestamp value. Otherwise, that process is kept in a pending queue.
+\item To release a resource, the process increments $c$ and sends \emph{okay} to all the process in the pending queue.
+\item The process is granted the resource when all of the it has requested the resource and all of the following are true: 
+\begin{itemize}
+\item it has received the \emph{okay} message from every other process in response to its \emph{request} message
+\item $c$ > 0
+\end{itemize}
+Immediately before entering the critical section, the process decrements $c$.
+\end{itemize}
 
 \end{enumerate}
 \end{enumerate}
