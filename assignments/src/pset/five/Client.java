@@ -2,6 +2,7 @@ package pset.five;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 /** Client class
@@ -10,15 +11,16 @@ public class Client {
 
     private static DataInputStream stdin;
     private static DataOutputStream stdout;
+    private static final int TIMEOUT = 100;
 
     /** Start a client based on given command line arguments.
      */
     @SuppressWarnings("resource")
     public static void main (String[] args) {
 
-        String hostAddress;
-        int tcpPort;
-        int udpPort;
+    	int numAddresses;
+        ArrayList<String> addresses = new ArrayList<String>();
+        
 
         if (args.length != 3 && args.length != 4) {
             String s = "";
@@ -31,20 +33,13 @@ public class Client {
             System.exit(-1);
         }
 
-        hostAddress = args[0];
-        tcpPort = Integer.parseInt(args[1]);
-        udpPort = Integer.parseInt(args[2]);
+        numAddresses = Integer.parseInt(args[0]);
+        for(int i = 1; i <= numAddresses; i++){
+        	addresses.add(args[i]);
+        }
 
         Scanner sc = null;
-        if (args.length == 3) {
-            sc = new Scanner(System.in);
-        } else {
-            try {
-                sc = new Scanner(new File(args[3]));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            }
-        }
+        sc = new Scanner(System.in);
         while(sc.hasNextLine()) {
 
             String cmd = sc.nextLine();
@@ -58,50 +53,33 @@ public class Client {
                 System.out.println("ERROR: No such command");
             }
 
-            boolean udp = tokens[tokens.length-1].toLowerCase().startsWith("u");
+         
             String message = String.format("%s\n", cmd);
             String response = "";
-            try {
-                if (udp) {
-                    response = sendUdp(message, hostAddress, udpPort);
-                } else {
-                    response = sendTcp(message, hostAddress, tcpPort);
-                }
-            } catch (IOException e) { e.printStackTrace(); }
+            response = sendTcp(message, addresses);
             System.out.print(String.format("%s", response));
         }
     }
 
-    /** Send a message to specified address and port via UDP.
-     */
-    public static String sendUdp(String message, String address, int port)
-        throws IOException {
-
-        byte[] sendData = message.getBytes();
-        @SuppressWarnings("resource")
-            DatagramSocket dsocket = new DatagramSocket();
-        InetAddress iAddress = InetAddress.getByName(address);
-        DatagramPacket sendPacket = new DatagramPacket(sendData,
-                                                       sendData.length,
-                                                       iAddress, port);
-        dsocket.send(sendPacket);
-
-        byte[] receiveData = new byte[2048];
-        DatagramPacket receivePacket = new DatagramPacket(receiveData,
-                                                          receiveData.length);
-        dsocket.receive(receivePacket);
-        return new String(receivePacket.getData());
-    }
-
     /** Send a message to specified address and port via TCP.
      */
-    public static String sendTcp(String message, String address, int port)
-        throws IOException {
-      
-        Socket ssocket = new Socket(address, port);
-        stdout = new DataOutputStream(ssocket.getOutputStream());
-        stdin = new DataInputStream(ssocket.getInputStream());
-        stdout.writeUTF(message);
-        return stdin.readUTF();
+    public static String sendTcp(String message, ArrayList<String> addresses){
+    	int i = 0;
+    	Socket ssocket = new Socket();
+    	while(true){
+    		String strAddress = addresses.get(i).split(":")[0];
+    		int intPort = Integer.parseInt(addresses.get(i).split(":")[1]);
+            try {
+            	//TODO: convert to nonblocking socket channel
+				ssocket.connect(new InetSocketAddress(strAddress,intPort), TIMEOUT);
+				stdout = new DataOutputStream(ssocket.getOutputStream());
+		        stdin = new DataInputStream(ssocket.getInputStream());
+		        stdout.writeUTF(message);
+		        return stdin.readUTF();
+			} catch (IOException e1) {
+				i %= i + 1;
+			}
+    	}
+    	
     }
 }
