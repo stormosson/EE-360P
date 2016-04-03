@@ -22,21 +22,7 @@ define 'assignments', :layout => ass_layout do
   package_with_javadoc
 
   #--- Build settings
-  # compile.options.target = JAVA_TARGET
   doc.from projects('assignments')
-
-  #--- Project settings
-  # define 'pset1' do
-  #   package :javadoc
-  #   javadoc sources
-  #   doc.using :windowtitle => "Abandon All Hope", :private => true
-  # end
-
-  # define 'pset2' do
-  #   package :javadoc
-  #   javadoc sources
-  #   doc.using :windowtitle => "Abandon All Hope", :private => true
-  # end
 
   task :default => [:build, :doc]
 

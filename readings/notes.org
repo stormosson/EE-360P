@@ -1,0 +1,40 @@
+#+author: Eric Crosson
+#+date: Easter Sunday March 27, 2016
+* Chapter 6 :: Network communication
+** UDP :: socket based communication
+- order not guaranteed
+- reliabiity not guaranteed
+** TCP :: stream based communication
+- reliable
+- ordered
+- not as efficient
+** RMI :: remote method invocation
+- /at-most-once/ execution
+- pass arguments to server
+  - get result back as message
+- entire process hidden from user
+* Chapter 7 :: Models and Clocks
+** Interleaving model ::  shared physical clock
+** /Happened-before/ model :: no shared physical clock
+** Logical clock :: total order
+A logical clock $C$ is a map from the set of events $E$ to $N$ (the set of
+natural numbers) with the following constraint: 
+
+$\forall e, f \in E : e
+\rightarrow f \doublerightarrow C(e) < C(f)$
+** Vector clocks :: partial order
+A vector clock $v$ is a map from $S$ to $N^k$ (vectors of natura1 numbers) with
+the following constraint:
+
+$\forall s, t: s \rightarrow t \doublearrow s.v < t.v$
+
+where $s.v$ is the vector assigned to the state $s$.
+*** Vector algorithm
+- requires o(n) integers to be sent with every message
+- bonus over lamport: concurrency between events can be calculated
+  - not strictly less than each other (|||)
+** Direct dependency clocks :: weaker than the vector algorithm
+- send only your local update, not the n vector clocks
+** Matrix clocks :: superset of vector clock
+- The value $s.u[i,j]$ could represent what process $s.p$ knows about what
+  process $i$ knows about process $j$
