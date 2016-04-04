@@ -29,6 +29,7 @@ class Launcher {
             System.exit(-1);
         }
 
+        /* Sanitize command line arguments */
         serverID = Integer.parseInt(args[0]);
         numServers = Integer.parseInt(args[1]);
         String filename = args[2];
@@ -37,19 +38,24 @@ class Launcher {
             addresses.add(args[i]);
         }
 
+        /* Stand up all the servers in individual threads, keeping a reference
+         * to only the first server (guaranteed to exist). */
         Server initServer = null;
-        ArrayList<Thread> servers = new ArrayList<Thread>();
+        ArrayList<Thread> server_threads = new ArrayList<Thread>();
         /* Initialize -- parse the inventory file */
         for(int i = 1; i <= numServers; i++){
             Server s = new Server(i-1, addresses);
             Thread t = new Thread(s);
             t.start();
-            servers.add(t);
+            server_threads.add(t);
             if (initServer == null) {
                 initServer = s;
             }
         }
 
+        /* Scan the inventory and add items to our single server reference. He
+         * will synchronize the other servers to the same state. Our server is a
+         * boy his name is Asimov. */
         Scanner scan = null;
         try {
             scan = new Scanner(new File(filename));
@@ -60,18 +66,21 @@ class Launcher {
             String[] line = scan.nextLine().split("\\s+");
             if (line.length != 2)
                 continue;
-            /* Assume: nonmatching inventory lines refer to different items */
+            /* Assume: nonmatching 'item' field in inventory lines refer to
+             * different items */
             String item = line[0];
             String quantity = line[1];
-            ArrayList<String> parameters = new ArrayList<String>(Arrays.asList(item, quantity));
+            ArrayList<String> parameters = new
+                ArrayList<String>(Arrays.asList(item, quantity));
             initServer.CS("add", parameters);
-            initServer.list();
         }
 
+        initServer.list();
+
         /* Run -- accept incoming requests */
-        // printMap(inventory);
-
-
+        for (Thread t : server_threads) {
+            t.join();
+        }
     }
 }
 
@@ -95,35 +104,57 @@ public class Server implements Runnable{
         user_orders = new ConcurrentHashMap<String, ArrayList<String>>();
         String strPort = nodes.get(serverID).split(":")[1];
         this.port = Integer.parseInt(strPort);
-        new Thread(new TcpListener(port, this)).start();
     }
 
-    public void requestCS() {
+    @Override
+    public void run() {
+        /* Start listening for messages */
+        TcpListener tcplistener = new Thread(new TcpListener(port, this));
+        tcplistener.start();
+
+        /* wait until the listener exits */
+        tcplistener.join();
+
+        /* wtf is this? */
+        /* try { */
+        /*     String response = ""; */
+        /*     String[] args = command[1].split("\\s+"); */
+        /*     /\*send lamport message with command and paramters*\/ */
+        /*     /\* else: raise custom exception *\/ */
+        /*     respond(String.format("%s\n", response.trim())); */
+        /* } catch (IOException e) { */
+        /*     System.err.format("Request aborted: %s", e); */
+        /* } */
+    }
+
+    /* TODO: update return value to be balleriffic */
+    /* TODO: implement queue and lamports algorithm */
+    public void enqueue(String command, ArrayList<String> parameters,
+                        Timestamp t) {
 
     }
 
-    public void releaseCS() {
-
+    private void requestCS() {
+        /* TODO: implement */
     }
 
-    public void CS(String dispatch, ArrayList<String> parameters) {
+    private void releaseCS() {
+        /* TODO: implement */
+    }
+
+    private void CS(String dispatch, ArrayList<String> parameters) {
         delta(dispatch, parameters);
         releaseCS();
     }
 
     public void delta(String dispatch, ArrayList<String> parameters){
+        ListIterator it = parameters.listIterator();
         if("add".equals(dispatch)){
-            String productname = parameters.get(0);
-            String quantity = parameters.get(1);
-            add(productname, quantity);
+            add(it.next(), it.next());
         } else if("purchase".equals(dispatch)) {
-            String username = parameters.get(0);
-            String productname = parameters.get(1);
-            String quantity = parameters.get(2);
-            purchase(username, productname, quantity);
+            purchase(it.next(), it.next(), it.next());
         } else if("cancel".equals(dispatch)) {
-            String orderid = parameters.get(0);
-            cancel(orderid);
+            cancel(it.next());
         }
     }
 
@@ -138,7 +169,7 @@ public class Server implements Runnable{
     /**
      * Handle a purchase event.
      */
-    public synchronized String purchase(String username, String productname,
+    private synchronized String purchase(String username, String productname,
                                         String quantity) {
 
         if (!inventory.containsKey(productname)) {
@@ -175,7 +206,7 @@ public class Server implements Runnable{
      *
      * Assumes an order will not be canceled more than once.
      */
-    public synchronized String cancel(String orderid) {
+    private synchronized String cancel(String orderid) {
 
         Integer ordernum = Integer.parseInt(orderid);
         if (!ledger.containsKey(ordernum)) {
@@ -202,7 +233,7 @@ public class Server implements Runnable{
      * Assume canceled orders should still be listed. Assume username exists in
      * our database.
      */
-    public synchronized String search(String username) {
+    private synchronized String search(String username) {
 
         if (!user_orders.containsKey(username)) {
             return String.format("No order found for %s", username);
@@ -218,7 +249,7 @@ public class Server implements Runnable{
     /**
      * Handle an inventory list query.
      */
-    public synchronized String list() {
+    private synchronized String list() {
 
         String response = "";
         for (String item : inventory.keySet()) {
@@ -236,22 +267,6 @@ public class Server implements Runnable{
         for (Integer item : map.keySet())
             System.out.print(String.format("<%s,%s> ", item, map.get(item)));
         System.out.println("}");
-    }
-
-    @Override
-    public void run() {
-        try {
-
-            String response = "";
-            String[] args = command[1].split("\\s+");
-            /*send lamport message with command and paramters*/
-
-            /* else: raise custom exception */
-            respond(String.format("%s\n", response.trim()));
-        } catch (IOException e) {
-            System.err.format("Request aborted: %s", e);
-        }
-
     }
 
     private void respond(String message) throws IOException {
@@ -291,24 +306,14 @@ class Handler implements Runnable {
         try {
 
             String response = "";
-            String[] args = command[1].split("\\s+");
+            ArrayList<String> parameters = new
+                ArrayList<String>(command[1].split("\\s+"));
 
-            if (this.command[0].equals("purchase")) {
-                response = server.purchase(args[0], args[1], args[2]);
-            }
-            else if (this.command[0].equals("cancel")) {
-                response = server.cancel(args[0]);
-            }
-            else if (this.command[0].equals("search")) {
-                response = server.search(args[0]);
-            }
-            else if (this.command[0].equals("list")) {
-                response = server.list();
-            }
-            /* else: raise custom exception */
+            /* TODO: what is this? future? */
+            response = server.enqueue(command[0], parameters);
             respond(String.format("%s\n", response.trim()));
         } catch (IOException e) {
-            System.err.println(String.format("Request aborted: %s", e));
+            System.err.format("Request aborted: %s", e);
         }
     }
 
@@ -339,7 +344,7 @@ class TcpListener implements Runnable {
         try {
             ssocket = new ServerSocket(port);
         } catch (IOException e) {
-            System.err.println(String.format("Server aborted: %s", e));
+            System.err.format("Server aborted: %s", e);
         }
     }
 
@@ -350,6 +355,7 @@ class TcpListener implements Runnable {
     public void run() {
         try {
             while (true) {
+                /* dispatch an anonymous Handler thread */
                 new Thread(new Handler(ssocket.accept(), server)).start();
             }
         } catch (IOException e) {
