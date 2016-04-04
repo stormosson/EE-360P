@@ -129,6 +129,7 @@ public class Server implements Runnable{
 
     /* TODO: update return value to be balleriffic */
     /* TODO: implement queue and lamports algorithm */
+    /* Single entry and exit point for associated TcpListener */
     public void enqueue(String command, ArrayList<String> parameters,
                         Timestamp t) {
 
