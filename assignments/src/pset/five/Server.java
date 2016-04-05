@@ -155,60 +155,6 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         /* room for expansion (saving global state) here */
     }
 
-    /* Notify ALL servers in server_addresses of message msg (requesting CS). */
-    public void notifyServers(Message msg) {
-
-        this.enqueue(msg);
-        for (TcpListener channel : server_list.values()) {
-            channel.sendMessage(msg);
-        }
-    }
-
-    /* -- Lamports Interface -- */
-    /* Sending servers should invoke this method. */
-    /* Receive a message from another server. */
-    public void handleNotify(Message msg) {
-        /* TODO handle message type */
-        /* this can be two types of messages: a request, or a release message */
-
-
-
-        switch(msg.type()) {
-        case NONE:
-
-            break;
-
-        case REQUEST:
-            msgq.add(msg);
-            Message response = new Message(this, msg.getMessageString(),
-                                           msg.getTimestamp(),
-                                           MessageType.ACK);
-            caller.receiveServerMsg(response, this);
-            break;
-
-        case RELEASE:
-            break;
-
-        case ACK:
-            break;
-        }
-    }
-
-    /* TODO: implement queue and lamports algorithm */
-    /* Single entry and exit point for associated TcpListener. An invocation of
-     * enqueue signifies a message has been passed from a Client to this server
-     * through the server's associated TcpListener. */
-    public Future<String> enqueue(String command, ArrayList<String> parameters,
-                                  Timestamp t) {
-
-        return null;
-        /* TODO: determine how to create future. all I'm seeing is
-         * threadpool.submit returning a future, but i'm not seeing immediately
-         * how to utilize a threadpool inside the server class. might need to do
-         * some real refactoring to make this one work, not as bad as last time
-         * though. */
-    }
-
     /* Use to initialize a live node with initial inventory */
     public synchronized void add(String productname, String quantity){
         int intQuantity = Integer.parseInt(quantity);
@@ -216,6 +162,57 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
                       (inventory.containsKey(productname) ?
                        inventory.get(productname) : 0));
     }
+
+    /* Notify ALL servers in server_addresses of message msg (requesting CS). */
+    public void notifyServers(Message msg) {
+
+        this.enqueue(msg);
+        for (TcpListener channel : server_list.values()) {
+            channel.enqueue(msg);
+        }
+        /* TODO: block until all acks are received */
+    }
+
+    /* Return true if 'this' is at the head of the priority queue msgq. */
+    public boolean isHead() {
+        Message head = msgq.peek();
+        /* Peek might return null */
+        if (head == null) { return false; }
+        /* If head is current object, then yes 'this' is head */
+        if (head.getSender() == this) { return true; }
+        /* Otherwise, no we are not head */
+        return false;
+    }
+
+    /* Single entry and exit point for associated TcpListener. */
+    public Future<String> enqueue(Message msg) {
+        switch(msg.type()) {
+        case NONE:
+            /* message came from Client */
+            String cmd = msg.getServerCommand().getCommand();
+            ArrayList<String> params = msg.getServerCommand().getParameters();
+            /* Operate on the command in the Critical Section */
+            CS(dispatch, parameters);
+            break;
+
+        case REQUEST:
+            /* another Server requesting CS */
+            break;
+
+        case RELEASE:
+            /* Server currently in CS releases mutex */
+            /* Assert: only the head of the priority queue will send a release
+             * message; */
+            msgq.poll();        /* remove message holding CS */
+            break;
+
+        case ACK:
+            /* Message is responding to a REQUEST message */
+            break;
+        }
+        return null;
+    }
+
     private void requestCS() {
         recordEvent();          /* new event -- this thread ready for CS */
         Message msg = new Message(this, this.ts, MessageType.REQUEST);
@@ -231,27 +228,34 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         notifyServers(msg);
     }
 
-    public void delta(String dispatch, ArrayList<String> parameters){
+    public String delta(String dispatch, ArrayList<String> parameters){
+
         recordEvent();          /* new event -- CS has begun */
+
+        String response = "";
         ListIterator<String> it = parameters.listIterator();
         if("add".equals(dispatch)){
-            add(it.next(), it.next());
+            response =add(it.next(), it.next());
         } else if("purchase".equals(dispatch)) {
-            purchase(it.next(), it.next(), it.next());
+            response =purchase(it.next(), it.next(), it.next());
         } else if("cancel".equals(dispatch)) {
-            cancel(it.next());
+            response =cancel(it.next());
         }
+        return response;
     }
 
     public void CS(String dispatch, ArrayList<String> parameters) {
         requestCS();
         /* 1. all replies have been received */
         /* 2. when own request is at head of msgq, enter CS */
-        delta(dispatch, parameters);
+        /* TODO: ensure this server is at head of msgq */
+        String response = delta(dispatch, parameters);
+        /* TODO: respond to sender. when? inside or outside the CS? */
         releaseCS();
     }
     /* -- End Lamports Interface -- */
 
+    /* -- Begin Server interface -- acting as a server acts -- */
     /**
      * Handle a purchase event.
      */
@@ -354,6 +358,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
             System.out.print(String.format("<%s,%s> ", item, map.get(item)));
         System.out.println("}");
     }
+    /* -- End Server interface -- */
 
     private void respond(String message) throws IOException {
         DataOutputStream stdout = new DataOutputStream(tcpsocket.getOutputStream());

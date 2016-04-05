@@ -26,25 +26,37 @@ enum MessageType {
     public int type() { return type; }
 }
 
+class ServerCommand {
+    private String command;
+    private ArrayList<String> parameters;
+
+    ServerCommand(String cmd, ArrayList<String> params) {
+        this.command = cmd;
+        this.parameters = params;
+    }
+    public String getCommand() { return this.command; }
+    public ArrayList<String> getParameters() { return this.parameters; }
+}
+
 /** Class for creating messages used in Lamport's Algorithm. */
 class Message implements Comparable<Message> {
 
-    private String message;
+    private ServerCommand = server_command;
     private Server sender;
     private Timestamp timestamp;
-    public MessageType type;
+    private MessageType type;
 
-    public Message(Server sender, String message, Timestamp timestamp) {
+    public Message(Server sender, ServerCommand srv_cmd, Timestamp timestamp) {
         this.sender = sender;
-        this.message = message;
+        this.server_command = srv_cmd;
         this.timestamp = timestamp;
         this.type = MessageType.NONE;
     }
 
-    public Message(Server sender, String message, Timestamp timestamp,
+    public Message(Server sender, ServerCommand srv_cmd, Timestamp timestamp,
                    MessageType type) {
         this.sender = sender;
-        this.message = message;
+        this.server_command = srv_cmd;
         this.timestamp = timestamp;
         this.type = type;
     }
@@ -56,9 +68,15 @@ class Message implements Comparable<Message> {
         this.type = type;
     }
 
+    public ServerCommand getServerCommand() {
+        return server_command;
+    }
+
     public MessageType type() {
         return type;
     }
+
+    public Server getSender() { return sender; }
 
     public Timestamp getTimestamp() { return timestamp; }
 

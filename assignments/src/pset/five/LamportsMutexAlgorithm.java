@@ -21,6 +21,7 @@ public interface LamportsMutexAlgorithm {
 
     /* Synchronization methods */
     int recordEvent();
+    boolean isHead();         /* true if current object controls head of msgq */
 
     /* Critical section methods -- the point of synchronizing */
     void requestCS();
