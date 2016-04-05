@@ -91,7 +91,9 @@ public class Server implements Runnable{
     private Map<String, Integer> inventory = null;
     private Map<Integer, String> ledger = null;
     private Map<String, ArrayList<String>> user_orders = null;
+
     private Integer port; //this is the port that the server "this" listens on
+    private ArrayList<String> server_addresses = null;
 
     /* Variables used for Lamport's MuTex Algorithm */
     private Timestamp ts;
@@ -106,7 +108,9 @@ public class Server implements Runnable{
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
         user_orders = new ConcurrentHashMap<String, ArrayList<String>>();
-        port = Integer.parseInt(nodes.get(serverID).split(":")[1]);
+
+        server_addresses = nodes;
+        port = Integer.parseInt(server_addresses.get(serverID).split(":")[1]);
 
         ts = new Timestamp();
         msgq = new PriorityQueue<Message>();
@@ -118,6 +122,46 @@ public class Server implements Runnable{
         TcpListener tcplistener = new Thread(new TcpListener(port, this));
         tcplistener.start();
         tcplistener.join();
+    }
+
+    /* Notify ALL servers in server_addresses (including self) of message msg
+     * (requesting CS). */
+    public notifyServers(Message msg) {
+        /* TODO: implement */
+        for (String address : server_addresses) {
+            /* Since we need an ack from every REQUEST.... we need a datatype to
+             * act as a scoreboard. should all of this complexity be contained
+             * in a Requester class? it's getting pretty complex, just this
+             * lamport's part. maybe we should google lamport's algorithms */
+            /* haha the assignment doesn't say 'no existing code' */
+        }
+    }
+
+    /* Sending servers should invoke this method. */
+    /* Receive a message from another server. */
+    public receiveServerMsg(Message msg, Server caller) {
+        /* TODO handle message type */
+        /* this can be two types of messages: a request, or a release message */
+
+        timestamp.increment();
+
+        switch(msg.type()) {
+        MessageType.NONE:
+
+            break;
+
+        MessageType.REQUEST:
+            msgq.add(msg);
+            Message response = new Message(msg.message() ,timestamp , MessageType.ACK);
+            caller.receiveServerMsg(response, this);
+            break;
+
+        MessageType.RELEASE:
+            break;
+
+        MessageType.ACK:
+            break
+        }
     }
 
     /* TODO: implement queue and lamports algorithm */
@@ -274,23 +318,52 @@ public class Server implements Runnable{
     }
 }
 
+public enum MessageType {
+    NONE,
+    REQUEST,
+    RELEASE;
+    ACK;
+
+    private int type;
+    public int type() { return type; }
+}
+
 /** Class for creating messages used in Lamport's Algorithm. */
 class Message implements Comparable<Message> {
 
     private String message;
     private Timestamp timestamp;
+    public MessageType type;
 
     public Message(String message, Timestamp timestamp) {
         this.message = message;
         this.timestamp = timestamp;
+        this.type = NONE;
     }
 
     public Message(String message, int timestamp) {
         this.message = message;
         this.timestamp = new Timestamp(timestamp);
+        this.type = NONE;
     }
 
-    public getTimestamp() { return timestamp; }
+    public Message(String message, Timestamp timestamp, MessageType type) {
+        this.message = message;
+        this.timestamp = timestamp;
+        this.type = type;
+    }
+
+    public Message(String message, int timestamp, MessageType type) {
+        this.message = message;
+        this.timestamp = new Timestamp(timestamp);
+        this.type = type;
+    }
+
+    public MessageType type() {
+        return type.type();
+    }
+
+    public Timestamp getTimestamp() { return timestamp; }
 
     @Override
     public int compareTo(final Messaage that) {
