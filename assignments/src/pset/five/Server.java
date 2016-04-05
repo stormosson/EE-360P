@@ -91,20 +91,25 @@ public class Server implements Runnable{
     private Map<String, Integer> inventory = null;
     private Map<Integer, String> ledger = null;
     private Map<String, ArrayList<String>> user_orders = null;
+    private Integer port; //this is the port that the server "this" listens on
+
+    /* Variables used for Lamport's MuTex Algorithm */
+    private Timestamp ts;
+    PriorityQueue<Message> msgq = null;
 
     /* Temporary processing variables */
     private String[] command;
     private InetAddress address;
-    private Integer port; //this is the port that the server "this" listens on
     private Socket tcpsocket;
-    private Timestamp ts;
 
     public Server(int serverID, ArrayList<String> nodes){
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
         user_orders = new ConcurrentHashMap<String, ArrayList<String>>();
         port = Integer.parseInt(nodes.get(serverID).split(":")[1]);
+
         ts = new Timestamp();
+        msgq = new PriorityQueue<Message>();
     }
 
     @Override
@@ -270,7 +275,7 @@ public class Server implements Runnable{
 }
 
 /** Class for creating messages used in Lamport's Algorithm. */
-class Message {
+class Message implements Comparable<Message> {
 
     private String message;
     private Timestamp timestamp;
@@ -284,12 +289,19 @@ class Message {
         this.message = message;
         this.timestamp = new Timestamp(timestamp);
     }
+
+    public getTimestamp() { return timestamp; }
+
+    @Override
+    public int compareTo(final Messaage that) {
+        return this.timestamp.compareTo(that.getTimestamp);
+    }
 }
 
 /**
  * Timestamp used in Lamport's Mutual Exclusion Algorithm.
  */
-class Timestamp {
+class Timestamp implements Comparable<Timestamp> {
 
     /** Timestamp counter. */
     private int timestamp = 0;
@@ -301,6 +313,11 @@ class Timestamp {
      * process. */
     public int increment() {
         return ++timestamp;
+    }
+
+    @Override
+    public int compareTo(final Timestamp that) {
+        return Integer.compare(this.timestamp, that.timestamp);
     }
 }
 
