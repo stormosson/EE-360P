@@ -21,7 +21,7 @@ public class Client {
         int numAddresses;
         ArrayList<String> addresses = new ArrayList<String>();
 
-        if (!(args >= 3 && args <= 4)) {
+        if (!(args.length >= 3 && args.length <= 4)) {
             String s = "";
             /* TODO: update to relevant help string */
             s += ("ERROR: Provide 3 arguments\n");
@@ -58,7 +58,7 @@ public class Client {
     }
 
     /* Return true if command is unrecgonized */
-    private int invalidCommand(String command) {
+    private static boolean invalidCommand(String command) {
         command = command.toLowerCase();
         if (command.equals("purchase"))    { return false; }
         else if (command.equals("cancel")) { return false; }
@@ -67,11 +67,11 @@ public class Client {
         return true;
     }
 
-    private int getPortFromAddress(String str) {
+    private static int getPortFromAddress(String str) {
         return Integer.parseInt(str.split(":")[1]);
     }
 
-    private String getHostFromAddress(String str) {
+    private static String getHostFromAddress(String str) {
         return str.split(":")[0];
     }
 

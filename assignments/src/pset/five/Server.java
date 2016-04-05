@@ -6,8 +6,11 @@ import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.ListIterator;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 
 class Launcher {
@@ -76,7 +79,12 @@ class Launcher {
 
         /* Run -- accept incoming requests */
         for (Thread t : server_threads) {
-            t.join();
+            try {
+				t.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
         }
     }
 }
@@ -119,15 +127,20 @@ public class Server implements Runnable{
     @Override
     public void run() {
         /* Start listening for messages */
-        TcpListener tcplistener = new Thread(new TcpListener(port, this));
+        Thread tcplistener = new Thread(new TcpListener(port, this));
         tcplistener.start();
-        tcplistener.join();
+        try {
+			tcplistener.join();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
     /* Notify ALL servers in server_addresses (including self) of message msg
      * (requesting CS). */
-    public notifyServers(Message msg) {
-        /* TODO: implement */
+    public void notifyServers(Message msg) {
+        /* TODO: implement Note: not sure if void is the correct choice here*/
         for (String address : server_addresses) {
             /* Since we need an ack from every REQUEST.... we need a datatype to
              * act as a scoreboard. should all of this complexity be contained
@@ -139,28 +152,28 @@ public class Server implements Runnable{
 
     /* Sending servers should invoke this method. */
     /* Receive a message from another server. */
-    public receiveServerMsg(Message msg, Server caller) {
+    public void receiveServerMsg(Message msg, Server caller) {
         /* TODO handle message type */
         /* this can be two types of messages: a request, or a release message */
 
-        timestamp.increment();
+        msg.incrementTimestamp();
 
         switch(msg.type()) {
-        MessageType.NONE:
+        case NONE:
 
             break;
 
-        MessageType.REQUEST:
+        case REQUEST:
             msgq.add(msg);
-            Message response = new Message(msg.message() ,timestamp , MessageType.ACK);
+            Message response = new Message(msg.getMessageString(), msg.getTimestamp(), MessageType.ACK);
             caller.receiveServerMsg(response, this);
             break;
 
-        MessageType.RELEASE:
+        case RELEASE:
             break;
 
-        MessageType.ACK:
-            break
+        case ACK:
+            break;
         }
     }
 
@@ -170,6 +183,7 @@ public class Server implements Runnable{
      * through the server's associated TcpListener. */
     public Future<String> enqueue(String command, ArrayList<String> parameters,
                         Timestamp t) {
+    	return null;
         /* TODO: determine how to create future. all I'm seeing is
          * threadpool.submit returning a future, but i'm not seeing immediately
          * how to utilize a threadpool inside the server class. might need to do
@@ -185,13 +199,13 @@ public class Server implements Runnable{
         /* TODO: implement */
     }
 
-    private void CS(String dispatch, ArrayList<String> parameters) {
+    public void CS(String dispatch, ArrayList<String> parameters) {
         delta(dispatch, parameters);
         releaseCS();
     }
 
     public void delta(String dispatch, ArrayList<String> parameters){
-        ListIterator it = parameters.listIterator();
+        ListIterator<String> it = parameters.listIterator();
         if("add".equals(dispatch)){
             add(it.next(), it.next());
         } else if("purchase".equals(dispatch)) {
@@ -292,7 +306,7 @@ public class Server implements Runnable{
     /**
      * Handle an inventory list query.
      */
-    private synchronized String list() {
+    public synchronized String list() {
 
         String response = "";
         for (String item : inventory.keySet()) {
@@ -318,10 +332,10 @@ public class Server implements Runnable{
     }
 }
 
-public enum MessageType {
+enum MessageType {
     NONE,
     REQUEST,
-    RELEASE;
+    RELEASE,
     ACK;
 
     private int type;
@@ -338,13 +352,13 @@ class Message implements Comparable<Message> {
     public Message(String message, Timestamp timestamp) {
         this.message = message;
         this.timestamp = timestamp;
-        this.type = NONE;
+        this.type = MessageType.NONE;
     }
 
     public Message(String message, int timestamp) {
         this.message = message;
         this.timestamp = new Timestamp(timestamp);
-        this.type = NONE;
+        this.type = MessageType.NONE;
     }
 
     public Message(String message, Timestamp timestamp, MessageType type) {
@@ -360,14 +374,22 @@ class Message implements Comparable<Message> {
     }
 
     public MessageType type() {
-        return type.type();
+        return type;
     }
 
     public Timestamp getTimestamp() { return timestamp; }
+    
+    public String getMessageString(){
+    	return message;
+    }
+    
+    public void incrementTimestamp(){
+    	timestamp.increment();
+    }
 
     @Override
-    public int compareTo(final Messaage that) {
-        return this.timestamp.compareTo(that.getTimestamp);
+    public int compareTo(final Message that) {
+        return this.timestamp.compareTo(that.getTimestamp());
     }
 }
 
@@ -423,11 +445,10 @@ class Handler implements Runnable {
     public void run() {
         try {
             String response = "";
-            ArrayList<String> parameters = new
-                ArrayList<String>(command[1].split("\\s+"));
+            ArrayList<String> parameters = new ArrayList<String>(Arrays.asList(command[1].split("\\s+")));
 
             /* TODO: add last argument to enqueue, timestamp */
-            Future<String> response = server.enqueue(command[0], parameters);
+            Future<String> responseFuture = server.enqueue(command[0], parameters);
             /* blocking call: get */
             respond(String.format("%s\n", response.get().trim()));
         } catch (IOException e) {
