@@ -111,28 +111,19 @@ public class Server implements Runnable{
         /* Start listening for messages */
         TcpListener tcplistener = new Thread(new TcpListener(port, this));
         tcplistener.start();
-
         /* wait until the listener exits */
         tcplistener.join();
-
-        /* wtf is this? */
-        /* try { */
-        /*     String response = ""; */
-        /*     String[] args = command[1].split("\\s+"); */
-        /*     /\*send lamport message with command and paramters*\/ */
-        /*     /\* else: raise custom exception *\/ */
-        /*     respond(String.format("%s\n", response.trim())); */
-        /* } catch (IOException e) { */
-        /*     System.err.format("Request aborted: %s", e); */
-        /* } */
     }
 
-    /* TODO: update return value to be balleriffic */
     /* TODO: implement queue and lamports algorithm */
     /* Single entry and exit point for associated TcpListener */
-    public void enqueue(String command, ArrayList<String> parameters,
+    public Future<String> enqueue(String command, ArrayList<String> parameters,
                         Timestamp t) {
-
+        /* TODO: determine how to create future. all I'm seeing is
+         * threadpool.submit returning a future, but i'm not seeing immediately
+         * how to utilize a threadpool inside the server class. might need to do
+         * some real refactoring to make this one work, not as bad as last time
+         * though. */
     }
 
     private void requestCS() {
@@ -276,6 +267,13 @@ public class Server implements Runnable{
     }
 }
 
+/**
+ * Timestamp used in Lamport's Mutual Exclusion Algorithm.
+ */
+class Timestamp {
+    /* TODO: implement */
+}
+
 /** Handler class to dispatch received commands to the singleton Server.
  */
 class Handler implements Runnable {
@@ -305,14 +303,14 @@ class Handler implements Runnable {
     @Override
     public void run() {
         try {
-
             String response = "";
             ArrayList<String> parameters = new
                 ArrayList<String>(command[1].split("\\s+"));
 
-            /* TODO: what is this? future? */
-            response = server.enqueue(command[0], parameters);
-            respond(String.format("%s\n", response.trim()));
+            /* TODO: add last argument to enqueue, timestamp */
+            Future<String> response = server.enqueue(command[0], parameters);
+            /* blocking call: get */
+            respond(String.format("%s\n", response.get().trim()));
         } catch (IOException e) {
             System.err.format("Request aborted: %s", e);
         }
