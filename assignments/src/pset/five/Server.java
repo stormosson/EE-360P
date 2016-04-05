@@ -82,11 +82,10 @@ class Launcher {
         /* Run -- accept incoming requests */
         for (Thread t : server_threads) {
             try {
-				t.join();
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+                t.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
@@ -94,7 +93,7 @@ class Launcher {
 /**
  * Server class. This server assumes all requests will be valid.
  */
-public class Server implements Runnable{
+public class Server implements Runnable, LamportsMutexAlgorithm {
 
     /* Internal state variables */
     private int order_nonce = 1;
@@ -104,6 +103,7 @@ public class Server implements Runnable{
 
     private Integer port; //this is the port that the server "this" listens on
     private ArrayList<String> server_addresses = null;
+    private Map<String, TcpListener> server_list = null;
 
     /* Variables used for Lamport's MuTex Algorithm */
     private Timestamp ts;
@@ -120,11 +120,20 @@ public class Server implements Runnable{
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
         user_orders = new ConcurrentHashMap<String, ArrayList<String>>();
+        server_list = new ConcurrentHashMap<String, TcpListener>();
 
         server_addresses = nodes;
         port = Integer.parseInt(server_addresses.get(serverID).split(":")[1]);
 
-        //TODO: we initialize this but never use this particular timestamp... why is that?
+        /* Create a channel to every server, since we will have to synchronize
+         * with them for Lamports Algorithm */
+        server_list = new ArrayList<Server>();
+        for (int i = 0; i < server_addresses.size(); ++i) {
+            if (serverID == i) { continue; }
+            server_list[server_addresses] = new 
+                TcpListener(server_addresses.get(i));
+        }
+
         ts = new Timestamp();
         msgq = new PriorityQueue<Message>();
     }
@@ -135,39 +144,34 @@ public class Server implements Runnable{
         Thread tcplistener = new Thread(new TcpListener(port, this));
         tcplistener.start();
         try {
-			tcplistener.join();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    }
-
-    /* Notify ALL servers in server_addresses (including self) of message msg
-     * (requesting CS). */
-    public void notifyServers(Message msg) {
-        /* TODO: implement Note: not sure if void is the correct choice here*/
-        for (String address : server_addresses) {
-        	//TODO: not sure if this will work, but we could just keep a counter
-        	//that indicates the number of responses... i think that's how i've
-        	//seen it discussed in the book
-        	
-            /* Since we need an ack from every REQUEST.... we need a datatype to
-             * act as a scoreboard. should all of this complexity be contained
-             * in a Requester class? it's getting pretty complex, just this
-             * lamport's part. maybe we should google lamport's algorithms */
-            /* haha the assignment doesn't say 'no existing code' */
+            tcplistener.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 
+    private void recordEvent() {
+        ts.increment(); 
+        /* room for expansion (saving global state) here */
+    }
+
+    /* Notify ALL servers in server_addresses of message msg (requesting CS). */
+    public void notifyServers(Message msg) {
+
+        this.enqueue(msg);
+        for (TcpListener channel : server_list.values()) {
+            channel.sendMessage(msg);
+        }
+    }
+
+    /* -- Lamports Interface -- */
     /* Sending servers should invoke this method. */
     /* Receive a message from another server. */
-    public void receiveServerMsg(Message msg, Server caller) {
+    public void handleNotify(Message msg) {
         /* TODO handle message type */
         /* this can be two types of messages: a request, or a release message */
 
-    	
-    	//TODO: are we incrementing the right timestamp here? should it be the message's or server's?
-        msg.incrementTimestamp();
+
 
         switch(msg.type()) {
         case NONE:
@@ -176,7 +180,9 @@ public class Server implements Runnable{
 
         case REQUEST:
             msgq.add(msg);
-            Message response = new Message(msg.getMessageString(), msg.getTimestamp(), MessageType.ACK);
+            Message response = new Message(this, msg.getMessageString(),
+                                           msg.getTimestamp(),
+                                           MessageType.ACK);
             caller.receiveServerMsg(response, this);
             break;
 
@@ -193,9 +199,9 @@ public class Server implements Runnable{
      * enqueue signifies a message has been passed from a Client to this server
      * through the server's associated TcpListener. */
     public Future<String> enqueue(String command, ArrayList<String> parameters,
-                        Timestamp t) {
-    	
-    	return null;
+                                  Timestamp t) {
+
+        return null;
         /* TODO: determine how to create future. all I'm seeing is
          * threadpool.submit returning a future, but i'm not seeing immediately
          * how to utilize a threadpool inside the server class. might need to do
@@ -203,20 +209,30 @@ public class Server implements Runnable{
          * though. */
     }
 
+    /* Use to initialize a live node with initial inventory */
+    public synchronized void add(String productname, String quantity){
+        int intQuantity = Integer.parseInt(quantity);
+        inventory.put(productname, intQuantity +
+                      (inventory.containsKey(productname) ?
+                       inventory.get(productname) : 0));
+    }
     private void requestCS() {
-        /* TODO: implement */
+        recordEvent();          /* new event -- this thread ready for CS */
+        Message msg = new Message(this, this.ts, MessageType.REQUEST);
+        this.enqueue(msg);
+        /* This is a blocking method -- it will wait for all nodes to reply */
+        notifyServers(msg);
     }
 
     private void releaseCS() {
-        /* TODO: implement */
-    }
-
-    public void CS(String dispatch, ArrayList<String> parameters) {
-        delta(dispatch, parameters);
-        releaseCS();
+        recordEvent();          /* new event -- CS has ended */
+        Message msg = new Message(this, this.ts, MessageType.RELEASE);
+        this.enqueue(msg);
+        notifyServers(msg);
     }
 
     public void delta(String dispatch, ArrayList<String> parameters){
+        recordEvent();          /* new event -- CS has begun */
         ListIterator<String> it = parameters.listIterator();
         if("add".equals(dispatch)){
             add(it.next(), it.next());
@@ -227,19 +243,20 @@ public class Server implements Runnable{
         }
     }
 
-    /* Use to initialize a live node with initial inventory */
-    public synchronized void add(String productname, String quantity){
-        int intQuantity = Integer.parseInt(quantity);
-        inventory.put(productname, intQuantity +
-                      (inventory.containsKey(productname) ?
-                       inventory.get(productname) : 0));
+    public void CS(String dispatch, ArrayList<String> parameters) {
+        requestCS();
+        /* 1. all replies have been received */
+        /* 2. when own request is at head of msgq, enter CS */
+        delta(dispatch, parameters);
+        releaseCS();
     }
+    /* -- End Lamports Interface -- */
 
     /**
      * Handle a purchase event.
      */
     private synchronized String purchase(String username, String productname,
-                                        String quantity) {
+                                         String quantity) {
 
         if (!inventory.containsKey(productname)) {
             return "Not Available - We do not sell this product";
@@ -344,90 +361,6 @@ public class Server implements Runnable{
     }
 }
 
-enum MessageType {
-    NONE,
-    REQUEST,
-    RELEASE,
-    ACK;
-
-    private int type;
-    public int type() { return type; }
-}
-
-/** Class for creating messages used in Lamport's Algorithm. */
-class Message implements Comparable<Message> {
-
-    private String message;
-    private Timestamp timestamp;
-    public MessageType type;
-
-    public Message(String message, Timestamp timestamp) {
-        this.message = message;
-        this.timestamp = timestamp;
-        this.type = MessageType.NONE;
-    }
-
-    public Message(String message, int timestamp) {
-        this.message = message;
-        this.timestamp = new Timestamp(timestamp);
-        this.type = MessageType.NONE;
-    }
-
-    public Message(String message, Timestamp timestamp, MessageType type) {
-        this.message = message;
-        this.timestamp = timestamp;
-        this.type = type;
-    }
-
-    public Message(String message, int timestamp, MessageType type) {
-        this.message = message;
-        this.timestamp = new Timestamp(timestamp);
-        this.type = type;
-    }
-
-    public MessageType type() {
-        return type;
-    }
-
-    public Timestamp getTimestamp() { return timestamp; }
-    
-    public String getMessageString(){
-    	return message;
-    }
-    
-    public void incrementTimestamp(){
-    	timestamp.increment();
-    }
-
-    @Override
-    public int compareTo(final Message that) {
-        return this.timestamp.compareTo(that.getTimestamp());
-    }
-}
-
-/**
- * Timestamp used in Lamport's Mutual Exclusion Algorithm.
- */
-class Timestamp implements Comparable<Timestamp> {
-
-    /** Timestamp counter. */
-    private int timestamp = 0;
-
-    public Timestamp() { timestamp = 0; }
-    public Timestamp(int counter) { timestamp = counter; }
-
-    /** Record an event -- increment the timestamp before each event in a given
-     * process. */
-    public int increment() {
-        return ++timestamp;
-    }
-
-    @Override
-    public int compareTo(final Timestamp that) {
-        return Integer.compare(this.timestamp, that.timestamp);
-    }
-}
-
 /** Handler class to dispatch received commands to the singleton Server.
  */
 class Handler implements Runnable {
@@ -473,43 +406,5 @@ class Handler implements Runnable {
         DataOutputStream stdout =
             new DataOutputStream(tcpsocket.getOutputStream());
         stdout.writeUTF(message);
-    }
-}
-
-/**
- * Listener class to accept requests over a TCP connection.
- */
-class TcpListener implements Runnable {
-
-    int port;
-    Server server;
-    ServerSocket ssocket;
-
-    /**
-     * Spawn a TCP listener on specified port.
-     */
-    TcpListener(int port, Server server) {
-        this.port = port;
-        this.server = server;
-        try {
-            ssocket = new ServerSocket(port);
-        } catch (IOException e) {
-            System.err.format("Server aborted: %s", e);
-        }
-    }
-
-    /**
-     * Listener event loop -- dispatches messages to Handler.
-     */
-    @Override
-    public void run() {
-        try {
-            while (true) {
-                /* dispatch an anonymous Handler thread */
-                new Thread(new Handler(ssocket.accept(), server)).start();
-            }
-        } catch (IOException e) {
-            System.err.format("Server aborted: %s", e);
-        }
     }
 }
