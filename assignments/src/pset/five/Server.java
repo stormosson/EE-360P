@@ -10,6 +10,8 @@ import java.util.ListIterator;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 
@@ -111,6 +113,8 @@ public class Server implements Runnable{
     private String[] command;
     private InetAddress address;
     private Socket tcpsocket;
+    /*Used for futures*/
+    private static ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public Server(int serverID, ArrayList<String> nodes){
         inventory = new ConcurrentHashMap<String, Integer>();
@@ -120,6 +124,7 @@ public class Server implements Runnable{
         server_addresses = nodes;
         port = Integer.parseInt(server_addresses.get(serverID).split(":")[1]);
 
+        //TODO: we initialize this but never use this particular timestamp... why is that?
         ts = new Timestamp();
         msgq = new PriorityQueue<Message>();
     }
@@ -142,6 +147,10 @@ public class Server implements Runnable{
     public void notifyServers(Message msg) {
         /* TODO: implement Note: not sure if void is the correct choice here*/
         for (String address : server_addresses) {
+        	//TODO: not sure if this will work, but we could just keep a counter
+        	//that indicates the number of responses... i think that's how i've
+        	//seen it discussed in the book
+        	
             /* Since we need an ack from every REQUEST.... we need a datatype to
              * act as a scoreboard. should all of this complexity be contained
              * in a Requester class? it's getting pretty complex, just this
@@ -156,6 +165,8 @@ public class Server implements Runnable{
         /* TODO handle message type */
         /* this can be two types of messages: a request, or a release message */
 
+    	
+    	//TODO: are we incrementing the right timestamp here? should it be the message's or server's?
         msg.incrementTimestamp();
 
         switch(msg.type()) {
@@ -183,6 +194,7 @@ public class Server implements Runnable{
      * through the server's associated TcpListener. */
     public Future<String> enqueue(String command, ArrayList<String> parameters,
                         Timestamp t) {
+    	
     	return null;
         /* TODO: determine how to create future. all I'm seeing is
          * threadpool.submit returning a future, but i'm not seeing immediately
