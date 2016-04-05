@@ -94,13 +94,14 @@ public class Server implements Runnable{
     private InetAddress address;
     private Integer port; //this is the port that the server "this" listens on
     private Socket tcpsocket;
+    private Timestamp ts;
 
     public Server(int serverID, ArrayList<String> nodes){
         inventory = new ConcurrentHashMap<String, Integer>();
         ledger = new ConcurrentHashMap<Integer, String>();
         user_orders = new ConcurrentHashMap<String, ArrayList<String>>();
-        String strPort = nodes.get(serverID).split(":")[1];
-        this.port = Integer.parseInt(strPort);
+        port = Integer.parseInt(nodes.get(serverID).split(":")[1]);
+        ts = new Timestamp();
     }
 
     @Override
@@ -113,7 +114,9 @@ public class Server implements Runnable{
     }
 
     /* TODO: implement queue and lamports algorithm */
-    /* Single entry and exit point for associated TcpListener */
+    /* Single entry and exit point for associated TcpListener. An invocation of
+     * enqueue signifies a message has been passed from a Client to this server
+     * through the server's associated TcpListener. */
     public Future<String> enqueue(String command, ArrayList<String> parameters,
                         Timestamp t) {
         /* TODO: determine how to create future. all I'm seeing is
@@ -264,11 +267,39 @@ public class Server implements Runnable{
     }
 }
 
+/** Class for creating messages used in Lamport's Algorithm. */
+class Message {
+
+    private String message;
+    private Timestamp timestamp;
+
+    public Message(String message, Timestamp timestamp) {
+        this.message = message;
+        this.timestamp = timestamp;
+    }
+
+    public Message(String message, int timestamp) {
+        this.message = message;
+        this.timestamp = new Timestamp(timestamp);
+    }
+}
+
 /**
  * Timestamp used in Lamport's Mutual Exclusion Algorithm.
  */
 class Timestamp {
-    /* TODO: implement */
+
+    /** Timestamp counter. */
+    private int timestamp = 0;
+
+    public Timestamp() { timestamp = 0; }
+    public Timestamp(int counter) { timestamp = counter; }
+
+    /** Record an event -- increment the timestamp before each event in a given
+     * process. */
+    public int increment() {
+        return ++timestamp;
+    }
 }
 
 /** Handler class to dispatch received commands to the singleton Server.
@@ -279,8 +310,7 @@ class Handler implements Runnable {
     Server server;
     Socket tcpsocket;
 
-    /** Create a handler capable of responding over TCP.
-     */
+    /** Create a handler capable of responding over TCP. */
     public Handler(Socket tcpsocket, Server server) {
         this.tcpsocket = tcpsocket;
         this.server = server;
@@ -313,8 +343,7 @@ class Handler implements Runnable {
         }
     }
 
-    /** Respond via TCP to the Client that pinged the Server API.
-     */
+    /** Respond via TCP to the Client that pinged the Server API. */
     private void respond(String message) throws IOException {
         DataOutputStream stdout =
             new DataOutputStream(tcpsocket.getOutputStream());
