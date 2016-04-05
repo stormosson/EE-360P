@@ -86,10 +86,13 @@ class Launcher {
  */
 public class Server implements Runnable{
 
+    /* Internal state variables */
     private int order_nonce = 1;
     private Map<String, Integer> inventory = null;
     private Map<Integer, String> ledger = null;
     private Map<String, ArrayList<String>> user_orders = null;
+
+    /* Temporary processing variables */
     private String[] command;
     private InetAddress address;
     private Integer port; //this is the port that the server "this" listens on
@@ -109,7 +112,6 @@ public class Server implements Runnable{
         /* Start listening for messages */
         TcpListener tcplistener = new Thread(new TcpListener(port, this));
         tcplistener.start();
-        /* wait until the listener exits */
         tcplistener.join();
     }
 
