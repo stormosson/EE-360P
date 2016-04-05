@@ -20,10 +20,10 @@ public class Client {
 
         int numAddresses;
         ArrayList<String> addresses = new ArrayList<String>();
-        
 
-        if (args.length != 3 && args.length != 4) {
+        if (!(args >= 3 && args <= 4)) {
             String s = "";
+            /* TODO: update to relevant help string */
             s += ("ERROR: Provide 3 arguments\n");
             s += ("\t(1) <hostAddress>: the address of the server\n");
             s += ("\t(2) <tcpPort>: the port number for TCP connection\n");
@@ -44,14 +44,10 @@ public class Client {
 
             String nextLine = sc.nextLine();
             String[] tokens = nextLine.split("\\s+");
-            String command = tokens[0];
 
-            if (command.equals("purchase")) {
-            } else if (command.equals("cancel")) {
-            } else if (command.equals("search")) {
-            } else if (command.equals("list")) {
-            } else {
-                System.out.format("No such command: %s", command);
+            if (invalidCommand(tokens[0])) {
+                System.out.format("No such command: %s", tokens[0]);
+                continue;
             }
 
             String message = String.format("%s\n", nextLine);
@@ -61,11 +57,21 @@ public class Client {
         }
     }
 
-    public int getPortFromAddress(String str) {
+    /* Return true if command is unrecgonized */
+    private int invalidCommand(String command) {
+        command = command.toLowerCase();
+        if (command.equals("purchase"))    { return false; }
+        else if (command.equals("cancel")) { return false; }
+        else if (command.equals("search")) { return false; }
+        else if (command.equals("list"))   { return false; }
+        return true;
+    }
+
+    private int getPortFromAddress(String str) {
         return Integer.parseInt(str.split(":")[1]);
     }
 
-    public String getHostFromAddress(String str) {
+    private String getHostFromAddress(String str) {
         return str.split(":")[0];
     }
 

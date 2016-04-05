@@ -42,15 +42,12 @@ class Launcher {
          * to only the first server (guaranteed to exist). */
         Server initServer = null;
         ArrayList<Thread> server_threads = new ArrayList<Thread>();
-        /* Initialize -- parse the inventory file */
         for(int i = 1; i <= numServers; i++){
             Server s = new Server(i-1, addresses);
             Thread t = new Thread(s);
             t.start();
             server_threads.add(t);
-            if (initServer == null) {
-                initServer = s;
-            }
+            initServer = initServer == null ? s : initServer;
         }
 
         /* Scan the inventory and add items to our single server reference. He
@@ -282,7 +279,7 @@ class Handler implements Runnable {
     Server server;
     Socket tcpsocket;
 
-    /** Create a handler capable of responding over TCP/UDP.
+    /** Create a handler capable of responding over TCP.
      */
     public Handler(Socket tcpsocket, Server server) {
         this.tcpsocket = tcpsocket;
@@ -316,7 +313,7 @@ class Handler implements Runnable {
         }
     }
 
-    /** Respond via TCP or UDP to the Client that pinged the Server API.
+    /** Respond via TCP to the Client that pinged the Server API.
      */
     private void respond(String message) throws IOException {
         DataOutputStream stdout =
