@@ -13,6 +13,9 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 
 class Launcher {
@@ -95,6 +98,9 @@ class Launcher {
  */
 public class Server implements Runnable, LamportsMutexAlgorithm {
 
+    private final Lock lock = new ReentrantLock();
+    private final Condition newHead = lock.newCondition();
+
     /* Internal state variables */
     private int order_nonce = 1;
     private Map<String, Integer> inventory = null;
@@ -102,6 +108,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     private Map<String, ArrayList<String>> user_orders = null;
 
     private Integer port; //this is the port that the server "this" listens on
+    public String server_address;
     private ArrayList<String> server_addresses = null;
     private Map<String, TcpListener> server_list = null;
 
@@ -123,11 +130,12 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         server_list = new ConcurrentHashMap<String, TcpListener>();
 
         server_addresses = nodes;
+        server_address = nodes.get(i);
         port = Integer.parseInt(server_addresses.get(serverID).split(":")[1]);
 
         /* Create a channel to every server, since we will have to synchronize
          * with them for Lamports Algorithm */
-        server_list = new ArrayList<Server>();
+       server_list = new ArrayList<Server>();
         for (int i = 0; i < server_addresses.size(); ++i) {
             if (serverID == i) { continue; }
             server_list[server_addresses] = new 
@@ -151,7 +159,12 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     }
 
     private void recordEvent() {
+        recordEvent(new Timestamp());
+    }
+
+    private void recordEvent(Timestamp t) {
         ts.increment(); 
+        ts = new Timestamp(Math.max(ts.get(), t.get()));
         /* room for expansion (saving global state) here */
     }
 
@@ -164,13 +177,18 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     }
 
     /* Notify ALL servers in server_addresses of message msg (requesting CS). */
+    /* Note: this message only returns when all ACKs have been seen */
     public void notifyServers(Message msg) {
 
         this.enqueue(msg);
         for (TcpListener channel : server_list.values()) {
             channel.enqueue(msg);
         }
-        /* TODO: block until all acks are received */
+        waitingOn = server_list.length()+1;
+        while (waitingOn > 0 ) {
+            responseReceived.await();
+            --waitingOn;
+        }
     }
 
     /* Return true if 'this' is at the head of the priority queue msgq. */
@@ -185,18 +203,26 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     }
 
     /* Single entry and exit point for associated TcpListener. */
-    public Future<String> enqueue(Message msg) {
+    public String enqueue(Message msg) {
+        recordEvent(msg.getTimestamp()); /* new event -- message channel is alive */
+
+        String responseToClient = "";
         switch(msg.type()) {
         case NONE:
             /* message came from Client */
             String cmd = msg.getServerCommand().getCommand();
             ArrayList<String> params = msg.getServerCommand().getParameters();
             /* Operate on the command in the Critical Section */
-            CS(dispatch, parameters);
+            responseToClient = CS(dispatch, parameters);
             break;
 
         case REQUEST:
             /* another Server requesting CS */
+            msgq.add(msg);
+            Message reply = new Message(this, mg.getServerCommand(), ts, ACK);
+            String requesting_server = msg.getSender().server_address;
+            TcpListener channel = server_list[requesting_server];
+            channel.enqueue(reply);
             break;
 
         case RELEASE:
@@ -204,20 +230,22 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
             /* Assert: only the head of the priority queue will send a release
              * message; */
             msgq.poll();        /* remove message holding CS */
+            newHead.signal();
             break;
 
         case ACK:
-            /* Message is responding to a REQUEST message */
+            /* Message is responding to 'this' object's REQUEST message */
+            responseReceived.signal();
             break;
         }
-        return null;
+        return responseToClient;
     }
 
     private void requestCS() {
         recordEvent();          /* new event -- this thread ready for CS */
         Message msg = new Message(this, this.ts, MessageType.REQUEST);
         this.enqueue(msg);
-        /* This is a blocking method -- it will wait for all nodes to reply */
+        /* notifyServers is a blocking method -- it will wait for all nodes to reply */
         notifyServers(msg);
     }
 
@@ -229,7 +257,6 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     }
 
     public String delta(String dispatch, ArrayList<String> parameters){
-
         recordEvent();          /* new event -- CS has begun */
 
         String response = "";
@@ -246,12 +273,14 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
 
     public void CS(String dispatch, ArrayList<String> parameters) {
         requestCS();
-        /* 1. all replies have been received */
+        /* 1. all replies have been received if requestCS has returned */
         /* 2. when own request is at head of msgq, enter CS */
-        /* TODO: ensure this server is at head of msgq */
+        while(!isHead()) {
+            newHead.await();
+        }
         String response = delta(dispatch, parameters);
-        /* TODO: respond to sender. when? inside or outside the CS? */
         releaseCS();
+        return response;
     }
     /* -- End Lamports Interface -- */
 
@@ -362,54 +391,6 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
 
     private void respond(String message) throws IOException {
         DataOutputStream stdout = new DataOutputStream(tcpsocket.getOutputStream());
-        stdout.writeUTF(message);
-    }
-}
-
-/** Handler class to dispatch received commands to the singleton Server.
- */
-class Handler implements Runnable {
-
-    String[] command;
-    Server server;
-    Socket tcpsocket;
-
-    /** Create a handler capable of responding over TCP. */
-    public Handler(Socket tcpsocket, Server server) {
-        this.tcpsocket = tcpsocket;
-        this.server = server;
-        DataInputStream stdin;
-        try {
-            stdin = new DataInputStream(tcpsocket.getInputStream());
-            String cmd = stdin.readUTF();
-            this.command = cmd.trim().split("\\s+", 2);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /** Handler's run method, parses received command and relays information to
-     * Server.
-     */
-    @Override
-    public void run() {
-        try {
-            String response = "";
-            ArrayList<String> parameters = new ArrayList<String>(Arrays.asList(command[1].split("\\s+")));
-
-            /* TODO: add last argument to enqueue, timestamp */
-            Future<String> responseFuture = server.enqueue(command[0], parameters);
-            /* blocking call: get */
-            respond(String.format("%s\n", response.get().trim()));
-        } catch (IOException e) {
-            System.err.format("Request aborted: %s", e);
-        }
-    }
-
-    /** Respond via TCP to the Client that pinged the Server API. */
-    private void respond(String message) throws IOException {
-        DataOutputStream stdout =
-            new DataOutputStream(tcpsocket.getOutputStream());
         stdout.writeUTF(message);
     }
 }

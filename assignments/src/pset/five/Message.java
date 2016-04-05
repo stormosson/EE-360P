@@ -46,10 +46,10 @@ class Message implements Comparable<Message> {
     private Timestamp timestamp;
     private MessageType type;
 
-    public Message(Server sender, ServerCommand srv_cmd, Timestamp timestamp) {
-        this.sender = sender;
-        this.server_command = srv_cmd;
-        this.timestamp = timestamp;
+    public Message(String command, ArrayList<String> parameters) {
+        this.sender = null;
+        this.server_command = new ServerCommand(command parameters);
+        this.timestamp = new Timestamp();
         this.type = MessageType.NONE;
     }
 

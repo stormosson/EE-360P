@@ -85,3 +85,52 @@ class TcpListener implements Runnable {
         }
     }
 }
+
+
+/** Handler class to dispatch received commands to the singleton Server.
+ */
+class Handler implements Runnable {
+
+    String[] command;
+    Server server;
+    Socket tcpsocket;
+
+    /** Create a handler capable of responding over TCP. */
+    public Handler(Socket tcpsocket, Server server) {
+        this.tcpsocket = tcpsocket;
+        this.server = server;
+        DataInputStream stdin;
+        try {
+            stdin = new DataInputStream(tcpsocket.getInputStream());
+            String cmd = stdin.readUTF();
+            this.command = cmd.trim().split("\\s+", 2);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** Handler's run method, parses received command and relays information to
+     * Server.
+     */
+    @Override
+    public void run() {
+        try {
+            String response = "";
+            ArrayList<String> parameters = new 
+                ArrayList<String>(Arrays.asList(command[1].split("\\s+")));
+
+            Message message = new Message(command[0], parameters);
+            String responseToClient = server.enqueue(msg);
+            respond(String.format("%s\n", responseToClient.trim()));
+        } catch (IOException e) {
+            System.err.format("Request aborted: %s", e);
+        }
+    }
+
+    /** Respond via TCP to the Client that pinged the Server API. */
+    private void respond(String message) throws IOException {
+        DataOutputStream stdout =
+            new DataOutputStream(tcpsocket.getOutputStream());
+        stdout.writeUTF(message);
+    }
+}
