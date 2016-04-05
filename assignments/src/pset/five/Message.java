@@ -41,14 +41,14 @@ class ServerCommand {
 /** Class for creating messages used in Lamport's Algorithm. */
 class Message implements Comparable<Message> {
 
-    private ServerCommand = server_command;
+    private ServerCommand server_command;
     private Server sender;
     private Timestamp timestamp;
     private MessageType type;
 
     public Message(String command, ArrayList<String> parameters) {
         this.sender = null;
-        this.server_command = new ServerCommand(command parameters);
+        this.server_command = new ServerCommand(command, parameters);
         this.timestamp = new Timestamp();
         this.type = MessageType.NONE;
     }
@@ -64,7 +64,7 @@ class Message implements Comparable<Message> {
     public Message(Server sender, Timestamp timestamp, MessageType type) {
         this.sender = sender;
         this.timestamp = timestamp;
-        this.message = String.new();
+        this.server_command = null;
         this.type = type;
     }
 
@@ -79,10 +79,6 @@ class Message implements Comparable<Message> {
     public Server getSender() { return sender; }
 
     public Timestamp getTimestamp() { return timestamp; }
-
-    public String getMessageString(){
-        return message;
-    }
 
     public void incrementTimestamp(){
         timestamp.increment();

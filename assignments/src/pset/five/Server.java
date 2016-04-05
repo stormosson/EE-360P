@@ -1,21 +1,23 @@
 package pset.five;
 
-import java.util.Scanner;
-
-import java.net.*;
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.ListIterator;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 
 class Launcher {
@@ -100,6 +102,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
 
     private final Lock lock = new ReentrantLock();
     private final Condition newHead = lock.newCondition();
+    private final Condition responseReceived = lock.newCondition();
 
     /* Internal state variables */
     private int order_nonce = 1;
@@ -130,16 +133,15 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         server_list = new ConcurrentHashMap<String, TcpListener>();
 
         server_addresses = nodes;
-        server_address = nodes.get(i);
+        server_address = nodes.get(serverID);
         port = Integer.parseInt(server_addresses.get(serverID).split(":")[1]);
 
         /* Create a channel to every server, since we will have to synchronize
          * with them for Lamports Algorithm */
-       server_list = new ArrayList<Server>();
         for (int i = 0; i < server_addresses.size(); ++i) {
             if (serverID == i) { continue; }
-            server_list[server_addresses] = new 
-                TcpListener(server_addresses.get(i));
+            server_list.put(server_addresses.get(i), new 
+                TcpListener(server_addresses.get(i)));
         }
 
         ts = new Timestamp();
@@ -149,7 +151,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     @Override
     public void run() {
         /* Start listening for messages */
-        Thread tcplistener = new Thread(new TcpListener(port, this));
+        Thread tcplistener = new Thread(new TcpListener(server_address, port, this));
         tcplistener.start();
         try {
             tcplistener.join();
@@ -158,22 +160,24 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         }
     }
 
-    private void recordEvent() {
-        recordEvent(new Timestamp());
+    public int recordEvent() {
+        return recordEvent(new Timestamp());
     }
 
-    private void recordEvent(Timestamp t) {
+    private int recordEvent(Timestamp t) {
         ts.increment(); 
         ts = new Timestamp(Math.max(ts.get(), t.get()));
+        return ts.get();
         /* room for expansion (saving global state) here */
     }
 
     /* Use to initialize a live node with initial inventory */
-    public synchronized void add(String productname, String quantity){
+    public synchronized String add(String productname, String quantity){
         int intQuantity = Integer.parseInt(quantity);
         inventory.put(productname, intQuantity +
                       (inventory.containsKey(productname) ?
                        inventory.get(productname) : 0));
+        return String.format("Added %s of %s", quantity, productname);
     }
 
     /* Notify ALL servers in server_addresses of message msg (requesting CS). */
@@ -182,11 +186,13 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
 
         this.enqueue(msg);
         for (TcpListener channel : server_list.values()) {
-            channel.enqueue(msg);
+            channel.sendMessage(msg);
         }
-        waitingOn = server_list.length()+1;
+        int waitingOn = server_list.size()+1;
         while (waitingOn > 0 ) {
-            responseReceived.await();
+            try {
+				responseReceived.await();
+			} catch (InterruptedException e) {e.printStackTrace();}
             --waitingOn;
         }
     }
@@ -213,16 +219,16 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
             String cmd = msg.getServerCommand().getCommand();
             ArrayList<String> params = msg.getServerCommand().getParameters();
             /* Operate on the command in the Critical Section */
-            responseToClient = CS(dispatch, parameters);
+            responseToClient = CS(cmd, params);
             break;
 
         case REQUEST:
             /* another Server requesting CS */
             msgq.add(msg);
-            Message reply = new Message(this, mg.getServerCommand(), ts, ACK);
+            Message reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
             String requesting_server = msg.getSender().server_address;
-            TcpListener channel = server_list[requesting_server];
-            channel.enqueue(reply);
+            TcpListener channel = server_list.get(requesting_server);
+            channel.sendMessage(reply);
             break;
 
         case RELEASE:
@@ -241,7 +247,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         return responseToClient;
     }
 
-    private void requestCS() {
+    public void requestCS() {
         recordEvent();          /* new event -- this thread ready for CS */
         Message msg = new Message(this, this.ts, MessageType.REQUEST);
         this.enqueue(msg);
@@ -249,7 +255,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         notifyServers(msg);
     }
 
-    private void releaseCS() {
+    public void releaseCS() {
         recordEvent();          /* new event -- CS has ended */
         Message msg = new Message(this, this.ts, MessageType.RELEASE);
         this.enqueue(msg);
@@ -262,21 +268,23 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         String response = "";
         ListIterator<String> it = parameters.listIterator();
         if("add".equals(dispatch)){
-            response =add(it.next(), it.next());
+            response = add(it.next(), it.next());
         } else if("purchase".equals(dispatch)) {
-            response =purchase(it.next(), it.next(), it.next());
+            response = purchase(it.next(), it.next(), it.next());
         } else if("cancel".equals(dispatch)) {
-            response =cancel(it.next());
+            response = cancel(it.next());
         }
         return response;
     }
 
-    public void CS(String dispatch, ArrayList<String> parameters) {
+    public String CS(String dispatch, ArrayList<String> parameters) {
         requestCS();
         /* 1. all replies have been received if requestCS has returned */
         /* 2. when own request is at head of msgq, enter CS */
         while(!isHead()) {
-            newHead.await();
+            try {
+				newHead.await();
+			} catch (InterruptedException e) {e.printStackTrace();}
         }
         String response = delta(dispatch, parameters);
         releaseCS();

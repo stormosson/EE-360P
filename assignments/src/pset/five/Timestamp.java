@@ -1,22 +1,8 @@
 package pset.five;
 
-import java.util.Scanner;
+interface LamportTimestamp {
 
-import java.net.*;
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-
-public interface LamportTimestamp {
-
-    private int counter;
+    int counter = 0;
     int increment();            /* increment counter */
     int get();                  /* get counter */
 }
@@ -24,7 +10,7 @@ public interface LamportTimestamp {
 /**
  * Timestamp used in Lamport's Mutual Exclusion Algorithm.
  */
-class Timestamp implements LamportTimestamp, Comparable<Timestamp> {
+public class Timestamp implements LamportTimestamp, Comparable<Timestamp> {
 
     /** Timestamp counter. */
     private int counter = 0;
@@ -36,7 +22,7 @@ class Timestamp implements LamportTimestamp, Comparable<Timestamp> {
         this.counter = counter; 
     }
 
-    public get() { 
+    public int get() { 
         return this.counter;
     }
 

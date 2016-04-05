@@ -1,18 +1,13 @@
 package pset.five;
 
-import java.util.Scanner;
-
-import java.net.*;
-import java.io.*;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.ListIterator;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 
 /* TODO: rename this to something sensible; it sends messages too */
@@ -39,7 +34,7 @@ class TcpListener implements Runnable {
      * Spawn a TCP listener on specified port.
      */
     TcpListener(String address) {
-        this(getHostFromAddress(address), getPortFromAddress(port));
+        this(getHostFromAddress(address), getPortFromAddress(address));
     }
 
     /**
@@ -120,7 +115,7 @@ class Handler implements Runnable {
                 ArrayList<String>(Arrays.asList(command[1].split("\\s+")));
 
             Message message = new Message(command[0], parameters);
-            String responseToClient = server.enqueue(msg);
+            String responseToClient = server.enqueue(message);
             respond(String.format("%s\n", responseToClient.trim()));
         } catch (IOException e) {
             System.err.format("Request aborted: %s", e);
