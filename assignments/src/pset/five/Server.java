@@ -117,6 +117,8 @@ class Launcher {
  */
 public class Server implements Runnable, LamportsMutexAlgorithm {
 
+    public final boolean debug = true;
+
     /** Lock used to implement signals and awaiting. */
     private final Lock lock = new ReentrantLock();
     /** Condition triggered when a new head appears at the tip of the msgq PriorityQueue. */
@@ -257,6 +259,10 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         recordEvent(msg.getTimestamp()); /* new event -- message channel is alive */
 
         String responseToClient = "";
+        Message reply;
+        TcpListener channel;
+        String requesting_server;
+
         switch(msg.type()) {
         case NONE:
             /* message came from Client */
@@ -269,9 +275,9 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         case REQUEST:
             /* another Server requesting CS */
             msgq.add(msg);
-            Message reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
-            String requesting_server = msg.getSender().server_address;
-            TcpListener channel = server_list.get(requesting_server);
+            reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
+            requesting_server = msg.getSender().server_address;
+            channel = server_list.get(requesting_server);
             channel.sendMessage(reply);
             break;
 
@@ -293,12 +299,12 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
              * specially. Update your database while he is still in the CS (and
              * everybody else is frozen to local-state-changes only) and
              * respond. He'll wait for all responses before releasing the CS. */
-            delta(msg.getServerCommand.getCommand(), 
-                  msg.getServerCommand.getParameters());
+            delta(msg.getServerCommand().getCommand(), 
+                  msg.getServerCommand().getParameters());
             /* TODO: question: do we need to differentiate the ACK and the synchronization ACK? */
-            Message reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
-            String requesting_server = msg.getSender().server_address;
-            TcpListener channel = server_list.get(requesting_server);
+            reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
+            requesting_server = msg.getSender().server_address;
+            channel = server_list.get(requesting_server);
             channel.sendMessage(reply);
             break;
         }
