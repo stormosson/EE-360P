@@ -23,7 +23,6 @@ class Launcher {
      * Start a server based on given command line arguments.
      */
     public static void main(String[] args) {
-
     	
         /** Server's unique ID number */
         int serverID;
@@ -37,39 +36,30 @@ class Launcher {
         /** Inventory file name*/
         String filename = "";
 
-        
         if (args.length != 0 && args.length < 4) {
             String s = "";
-            //TODO: change to relevant help string
             s += ("ERROR: Provide at least 3 arguments\n");
-            s += ("\t(1) <serverID> <numServers> <inventoryFileName>: server's unique identification number, number of servers, and the name of the inventory file\n");
+            s += ("\t(1) <serverID> <numServers> <inventoryFileName>: ");
+            s += ("server's unique identification number, number of servers, and the name of the inventory file\n");
             s += ("\t(2) <totalServers>: the total number of servers\n");
             s += ("\t(3) <address>:<portNum> the address of the first server and the port number\n");
             s += ("\t(4) <address>:<portNum> the address of the second server and the port number\n");
-            s += ("...\n");
+            s += ("\t...\n");
             s += ("\t(n) <address>:<portNum> the address of the nth server and the port number\n");
             System.out.println(s);
             System.exit(-1);
         }
         
+        /* Sanitize command line arguments */
+        Scanner scan = new Scanner(System.in);
         if(args.length != 0){
-	        /* Sanitize command line arguments */
-	        serverID = Integer.parseInt(args[0]);
-	        numServers = Integer.parseInt(args[1]);
-	        filename = args[2];
-	        /** List of server addresses in server:ip format */
-	        for (int i = 3; i < args.length; i++) {
-	            addresses.add(args[i]);
-	        }
-        } else {
-        	Scanner sc = new Scanner(System.in);
-        	serverID = sc.nextInt();
-        	numServers = sc.nextInt();
-        	filename = sc.nextLine();
-        	for(int i = 0; i < numServers; i++){
-        		addresses.add(sc.nextLine());
-        	}
-        	
+            scan = new Scanner(String.join(" ", args));
+        }
+        serverID = scan.nextInt();
+        numServers = scan.nextInt();
+        filename = scan.nextLine();
+        for(int i = 0; i < numServers; i++){
+        		addresses.add(scan.nextLine());
         }
 
         /* Stand up all the servers in individual threads, keeping a reference
