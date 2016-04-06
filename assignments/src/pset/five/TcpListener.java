@@ -62,7 +62,9 @@ class TcpListener implements Runnable {
 
     /* TODO: implement */
     public void sendMessage(Message msg) {
-        
+        //must use enqueue
+    	server.enqueue(msg);
+    	
     }
 
     /**

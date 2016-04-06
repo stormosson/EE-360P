@@ -183,18 +183,20 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     /* Notify ALL servers in server_addresses of message msg (requesting CS). */
     /* Note: this message only returns when all ACKs have been seen */
     public void notifyServers(Message msg) {
-
-        this.enqueue(msg);
-        for (TcpListener channel : server_list.values()) {
-            channel.sendMessage(msg);
-        }
-        int waitingOn = server_list.size()+1;
-        while (waitingOn > 0 ) {
-            try {
-				responseReceived.await();
-			} catch (InterruptedException e) {e.printStackTrace();}
-            --waitingOn;
-        }
+    	lock.lock();
+    	try{
+	        this.enqueue(msg);
+	        for (TcpListener channel : server_list.values()) {
+	            channel.sendMessage(msg);
+	        }
+	        int waitingOn = server_list.size()+1;
+	        while (waitingOn > 0 ) {
+	            try {
+					responseReceived.await();
+				} catch (InterruptedException e) {e.printStackTrace();}
+	            --waitingOn;
+	        }
+    	}finally{lock.unlock();}
     }
 
     /* Return true if 'this' is at the head of the priority queue msgq. */
@@ -279,16 +281,20 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
 
     public String CS(String dispatch, ArrayList<String> parameters) {
         requestCS();
-        /* 1. all replies have been received if requestCS has returned */
-        /* 2. when own request is at head of msgq, enter CS */
-        while(!isHead()) {
-            try {
-				newHead.await();
-			} catch (InterruptedException e) {e.printStackTrace();}
-        }
-        String response = delta(dispatch, parameters);
-        releaseCS();
-        return response;
+        lock.lock();
+        try{
+	        /* 1. all replies have been received if requestCS has returned */
+	        /* 2. when own request is at head of msgq, enter CS */
+	        while(!isHead()) {
+				try {
+					newHead.await();
+				} catch (InterruptedException e) {e.printStackTrace();}
+	        }
+	        String response = delta(dispatch, parameters);
+	        releaseCS();
+	        return response;
+        } 
+        finally{lock.unlock();}
     }
     /* -- End Lamports Interface -- */
 
