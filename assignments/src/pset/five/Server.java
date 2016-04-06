@@ -87,8 +87,9 @@ class Launcher {
         }
         while (scan.hasNextLine()) {
             String[] line = scan.nextLine().split("\\s+");
-            if (line.length != 2)
+            if (line.length != 2) {
                 continue;
+            }
             /* Assume: nonmatching 'item' field in inventory lines refer to
              * different items */
             String item = line[0];
@@ -220,16 +221,19 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         lock.lock();
         try{
             this.enqueue(msg);
+
             for (TcpListener channel : server_list.values()) {
+                recordEvent();
                 channel.sendMessage(msg);
             }
             int waitingOn = server_list.size()+1;
             while (waitingOn > 0 ) {
-                try {
-                    responseReceived.await();
-                } catch (InterruptedException e) {e.printStackTrace();}
+                responseReceived.await();
                 --waitingOn;
             }
+            if (debug) { System.out.format("== BARRIER REACHED =="); }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         } finally {
             lock.unlock();
         }
@@ -283,6 +287,20 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
             /* Message is responding to 'this' object's REQUEST message */
             responseReceived.signal();
             break;
+
+        case SYNC:
+            /* Message received during another server's CS -- treat this message
+             * specially. Update your database while he is still in the CS (and
+             * everybody else is frozen to local-state-changes only) and
+             * respond. He'll wait for all responses before releasing the CS. */
+            delta(msg.getServerCommand.getCommand(), 
+                  msg.getServerCommand.getParameters());
+            /* TODO: question: do we need to differentiate the ACK and the synchronization ACK? */
+            Message reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
+            String requesting_server = msg.getSender().server_address;
+            TcpListener channel = server_list.get(requesting_server);
+            channel.sendMessage(reply);
+            break;
         }
         return responseToClient;
     }
@@ -309,6 +327,8 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         recordEvent();          /* new event -- CS has begun */
 
         String response = "";
+
+        /* Update current state */
         ListIterator<String> it = parameters.listIterator();
         if("add".equals(dispatch)){
             response = add(it.next(), it.next());
@@ -317,7 +337,30 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         } else if("cancel".equals(dispatch)) {
             response = cancel(it.next());
         }
+
         return response;
+    }
+
+    /* TODO: verify this method, drunk coding */
+    public void synchronizeServers(ServerCommand srv_cmd) {
+        lock.lock();
+        Message sync = new Message(this, srv_cmd, ts, MessageType.SYNC);
+        try {
+            for (TcpListener channel : server_list.values()) {
+                recordEvent();
+                channel.sendMessage(sync);
+            }
+            int waitingOn = server_list.size()+1;
+            while (waitingOn > 0 ) {
+                responseReceived.await();
+                --waitingOn;
+            }
+            if (debug) { System.out.format("== BARRIER REACHED =="); }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } finally {
+            lock.unlock();
+        }
     }
 
     /** The Critical Section. This method acquires, executes and releases a
@@ -337,6 +380,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
                 }
             }
             String response = delta(dispatch, parameters);
+            synchronizeServers(new ServerCommand(dispatch, parameters));
             releaseCS();
             return response;
         } finally {

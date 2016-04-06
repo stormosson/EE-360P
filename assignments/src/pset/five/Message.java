@@ -20,7 +20,8 @@ enum MessageType {
     NONE,                       /* when unspecified, message is from Client */
     REQUEST,
     RELEASE,
-    ACK;
+    ACK,
+    SYNC;
 
     private int type;
     public int type() { return type; }
