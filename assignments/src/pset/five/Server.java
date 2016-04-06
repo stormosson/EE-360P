@@ -100,6 +100,8 @@ class Launcher {
  */
 public class Server implements Runnable, LamportsMutexAlgorithm {
 
+	private boolean debug = false;
+	
     private final Lock lock = new ReentrantLock();
     private final Condition newHead = lock.newCondition();
     private final Condition responseReceived = lock.newCondition();
