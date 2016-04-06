@@ -14,7 +14,10 @@ public class Client {
 
     private static DataInputStream stdin;
     private static DataOutputStream stdout;
+
     private static final int TIMEOUT = 100;
+    private final ArrayList<String> recognizedCommands = new
+        ArrayList<String>(Arrays.asList("purchase", "cancel", "search", "list"));
 
     /** Start a client based on given command line arguments.
      */
@@ -66,12 +69,7 @@ public class Client {
 
     /* Return true if command is unrecgonized */
     private static boolean invalidCommand(String command) {
-        command = command.toLowerCase();
-        if (command.equals("purchase"))    { return false; }
-        else if (command.equals("cancel")) { return false; }
-        else if (command.equals("search")) { return false; }
-        else if (command.equals("list"))   { return false; }
-        return true;
+        return recognizedCommands.contains(command.toLowerCase.trim());
     }
 
     /** Send a message to specified address and port via TCP.
