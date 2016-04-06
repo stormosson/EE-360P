@@ -140,9 +140,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     private Integer port; //this is the port that the server "this" listens on
     /** The address used by this server. */
     public String server_address;
-    /** The addresses used by the other servers mirroring this one. */
-    private ArrayList<String> server_addresses = null;
-    /** The communication channels to each server in server_addresses. */
+    /** The communication channels to each server. */
     private Map<String, TcpListener> server_list = null;
 
     /* Variables used for Lamport's MuTex Algorithm */
@@ -170,10 +168,9 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
 
         /* Create a channel to every server, since we will have to synchronize
          * with them for Lamports Algorithm */
-        for (int i = 0; i < server_addresses.size(); ++i) {
+        for (int i = 0; i < nodes.size(); ++i) {
             if (serverID == i) { continue; }
-            server_list.put(server_addresses.get(i), new 
-                            TcpListener(server_addresses.get(i)));
+            server_list.put(nodes.get(i), new TcpListener(nodes.get(i)));
         }
 
         ts = new Timestamp();
@@ -315,7 +312,6 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     public void requestCS() {
         recordEvent();          /* new event -- this thread ready for CS */
         Message msg = new Message(this, this.ts, MessageType.REQUEST);
-        this.enqueue(msg);
         /* notifyServers is a blocking method -- it will wait for all nodes to reply */
         notifyServers(msg);
     }
@@ -324,25 +320,20 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     public void releaseCS() {
         recordEvent();          /* new event -- CS has ended */
         Message msg = new Message(this, this.ts, MessageType.RELEASE);
-        this.enqueue(msg);
+        /* notifyServers is a blocking method -- it will wait for all nodes to reply */
         notifyServers(msg);
     }
 
     /** Apply a transactional change to our inventory. */
     public String delta(String dispatch, ArrayList<String> parameters){
         recordEvent();          /* new event -- CS has begun */
-
         String response = "";
 
         /* Update current state */
         ListIterator<String> it = parameters.listIterator();
-        if("add".equals(dispatch)){
-            response = add(it.next(), it.next());
-        } else if("purchase".equals(dispatch)) {
-            response = purchase(it.next(), it.next(), it.next());
-        } else if("cancel".equals(dispatch)) {
-            response = cancel(it.next());
-        }
+        if("add".equals(dispatch))      { response = add(it.next(), it.next()); } else
+        if("purchase".equals(dispatch)) { response = purchase(it.next(), it.next(), it.next()); } else
+        if("cancel".equals(dispatch))   { response = cancel(it.next()); }
 
         return response;
     }
