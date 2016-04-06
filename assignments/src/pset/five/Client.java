@@ -8,7 +8,7 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-/** Client class
+/** Client class -- used to contact the Server with requests.
  */
 public class Client {
 
