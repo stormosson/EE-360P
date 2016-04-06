@@ -34,7 +34,7 @@ public class Client {
             System.out.println(s);
             System.exit(-1);
         }
-        
+
         /* Scanner used to setup client and enumerate commands */
         Scanner scan = new Scanner(System.in);
 
