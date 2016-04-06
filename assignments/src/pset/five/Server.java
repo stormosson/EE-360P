@@ -348,6 +348,8 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     }
 
     /* TODO: verify this method, drunk coding */
+    /** Send a signal to the n-1 other servers after each local transaction,
+     * keeping the entire fleet up to date and immortal. */
     public void synchronizeServers(ServerCommand srv_cmd) {
         lock.lock();
         Message sync = new Message(this, srv_cmd, ts, MessageType.SYNC);
