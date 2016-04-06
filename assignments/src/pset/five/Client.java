@@ -79,8 +79,9 @@ public class Client {
             String strAddress = InetManipulator.getHostFromAddress(addresses.get(i));
             int port = InetManipulator.getPortFromAddress(addresses.get(i));
             try {
-                //TODO: convert to nonblocking socket channel
-                ssocket.connect(new InetSocketAddress(strAddress,port), TIMEOUT);
+                ssocket.connect(new InetSocketAddress(strAddress,port));
+                //turn off blocking I/O operations and set timeout
+                ssocket.setSoTimeout(TIMEOUT);
                 stdout = new DataOutputStream(ssocket.getOutputStream());
                 stdin = new DataInputStream(ssocket.getInputStream());
                 stdout.writeUTF(message);
