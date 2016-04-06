@@ -25,5 +25,5 @@ public interface LamportsMutexAlgorithm {
     /** How a given thread releases the critical section. */
     void releaseCS();
     /** A given thread's critical section. */
-    String CS(String dispatch, ArrayList<String> parameters);
+    String CS(String dispatch, ArrayList<String> parameters) throws InterruptedException;
 }

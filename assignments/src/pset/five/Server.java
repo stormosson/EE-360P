@@ -23,7 +23,7 @@ class Launcher {
      * Start a server based on given command line arguments.
      */
     public static void main(String[] args) {
-    	
+      
         /** Server's unique ID number */
         int serverID;
 
@@ -59,7 +59,7 @@ class Launcher {
         numServers = scan.nextInt();
         filename = scan.nextLine();
         for(int i = 0; i < numServers; i++){
-        		addresses.add(scan.nextLine());
+            addresses.add(scan.next());
         }
 
         /* Stand up all the servers in individual threads, keeping a reference
@@ -80,7 +80,6 @@ class Launcher {
         /* Scan the inventory and add items to our single server reference. He
          * will synchronize the other servers to the same state. Our server is a
          * boy his name is Asimov. */
-        Scanner scan = null;
         try {
             scan = new Scanner(new File(filename));
         } catch (FileNotFoundException e1) {
@@ -117,7 +116,6 @@ class Launcher {
  */
 public class Server implements Runnable, LamportsMutexAlgorithm {
 
-	private boolean debug = false;
     /** Lock used to implement signals and awaiting. */
     private final Lock lock = new ReentrantLock();
     /** Condition triggered when a new head appears at the tip of the msgq PriorityQueue. */
@@ -172,7 +170,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         for (int i = 0; i < server_addresses.size(); ++i) {
             if (serverID == i) { continue; }
             server_list.put(server_addresses.get(i), new 
-                TcpListener(server_addresses.get(i)));
+                            TcpListener(server_addresses.get(i)));
         }
 
         ts = new Timestamp();
@@ -219,20 +217,22 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
      * \warning This is a blocking method, returning only when all threads have
      * acknowledged this request. */
     public void notifyServers(Message msg) {
-    	lock.lock();
-    	try{
-	        this.enqueue(msg);
-	        for (TcpListener channel : server_list.values()) {
-	            channel.sendMessage(msg);
-	        }
-	        int waitingOn = server_list.size()+1;
-	        while (waitingOn > 0 ) {
-	            try {
-					responseReceived.await();
-				} catch (InterruptedException e) {e.printStackTrace();}
-	            --waitingOn;
-	        }
-    	}finally{lock.unlock();}
+        lock.lock();
+        try{
+            this.enqueue(msg);
+            for (TcpListener channel : server_list.values()) {
+                channel.sendMessage(msg);
+            }
+            int waitingOn = server_list.size()+1;
+            while (waitingOn > 0 ) {
+                try {
+                    responseReceived.await();
+                } catch (InterruptedException e) {e.printStackTrace();}
+                --waitingOn;
+            }
+        } finally {
+            lock.unlock();
+        }
     }
 
     /** Return true if 'this' server is at the head of the priority queue
@@ -327,18 +327,21 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         requestCS();
         lock.lock();
         try{
-	        /* 1. all replies have been received if requestCS has returned */
-	        /* 2. when own request is at head of msgq, enter CS */
-	        while(!isHead()) {
-				try {
-					newHead.await();
-				} catch (InterruptedException e) {e.printStackTrace();}
-	        }
-	        String response = delta(dispatch, parameters);
-	        releaseCS();
-	        return response;
-        } 
-        finally{lock.unlock();}
+            /* 1. all replies have been received if requestCS has returned */
+            /* 2. when own request is at head of msgq, enter CS */
+            while(!isHead()) {
+                try {
+                    newHead.await();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+            String response = delta(dispatch, parameters);
+            releaseCS();
+            return response;
+        } finally {
+            lock.unlock();
+        }
     }
     /* -- End Lamports Interface -- */
 

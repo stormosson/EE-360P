@@ -7,6 +7,7 @@ import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Arrays;
 
 /** Client class -- used to contact the Server with requests.
  */
@@ -16,7 +17,7 @@ public class Client {
     private static DataOutputStream stdout;
 
     private static final int TIMEOUT = 100;
-    private final ArrayList<String> recognizedCommands = new
+    private static final ArrayList<String> recognizedCommands = new
         ArrayList<String>(Arrays.asList("purchase", "cancel", "search", "list"));
 
     /** Start a client based on given command line arguments.
@@ -69,7 +70,7 @@ public class Client {
 
     /* Return true if command is unrecgonized */
     private static boolean invalidCommand(String command) {
-        return recognizedCommands.contains(command.toLowerCase.trim());
+        return recognizedCommands.contains(command.toLowerCase().trim());
     }
 
     /** Send a message to specified address and port via TCP.
