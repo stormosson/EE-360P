@@ -21,40 +21,36 @@ public class Client {
     @SuppressWarnings("resource")
     public static void main (String[] args) {
 
-        int numAddresses;
         ArrayList<String> addresses = new ArrayList<String>();
 
         if (!(args.length == 0 || args.length >= 3)) {
             String s = "";
-            /* TODO: update to relevant help string */
             s += ("ERROR: Provide at least 3 arguments:\n");
             s += ("\t(1) <numServers>: the number of servers\n");
             s += ("\t(2) <address>:<portNum> the address of the first server and the port number\n");
             s += ("\t(3) <address>:<portNum> the address of the second server and the port number\n");
-            s += ("...\n");
-            s += ("\t(n) <address>:<portNum> the address of the nth server and the port number\n");
+            s += ("\t...\n");
+            s += ("\t(n+2) <address>:<portNum> the address of the nth server and the port number\n");
             System.out.println(s);
             System.exit(-1);
         }
         
+        /* Scanner used to setup client and enumerate commands */
+        Scanner scan = new Scanner(System.in);
+
+        /* Populate 'addresses' from given arguments */
         if(args.length != 0){
-	        numAddresses = Integer.parseInt(args[0]);
-	        for(int i = 1; i <= numAddresses; i++){
-	            addresses.add(args[i]);
-	        }
-        } else {
-        	Scanner setupScanner = new Scanner(System.in);
-        	numAddresses = Integer.parseInt(setupScanner.nextLine());
-        	for(int i = 0; i < numAddresses; i++){
-        		addresses.add(setupScanner.nextLine());
-        	}
+            scan = new Scanner(String.join(" ", args));
+        }
+        int numAddresses = scan.nextInt();
+        for(int i = 0; i < numAddresses; i++){
+            addresses.add(scan.next());
         }
 
-        Scanner sc = null;
-        sc = new Scanner(System.in);
-        while(sc.hasNextLine()) {
+        /* Enumerate commands */
+        while(scan.hasNextLine()) {
 
-            String nextLine = sc.nextLine();
+            String nextLine = scan.nextLine();
             String[] tokens = nextLine.split("\\s+");
 
             if (invalidCommand(tokens[0])) {
@@ -63,8 +59,7 @@ public class Client {
             }
 
             String message = String.format("%s\n", nextLine);
-            String response = "";
-            response = sendTcp(message, addresses);
+            String response = sendTcp(message, addresses);
             System.out.format("%s", response);
         }
     }
