@@ -26,15 +26,21 @@ class Launcher {
      * Start a server based on given command line arguments.
      */
     public static void main(String[] args) {
+
+        /** Server's unique ID number */
         int serverID;
+
+        /** Total number of servers */
         int numServers;
+
         if (args.length != 5) {
             String s = "";
             //TODO: change to relevant help string
             s += ("ERROR: Provide 3 arguments\n");
-            s += ("\t(1) <tcpPort>: the port number for TCP connection\n");
-            s += ("\t(2) <udpPort>: the port number for UDP connection\n");
+            s += ("\t(1) <uniqueServerID>: server's unique identification number\n");
+            s += ("\t(2) <totalServers>: the total number of servers\n");
             s += ("\t(3) <file>: the file of inventory\n");
+            s += ("\t<4...> <servers>: the n servers in ip:port format\n");
             System.out.println(s);
             System.exit(-1);
         }
@@ -43,14 +49,18 @@ class Launcher {
         serverID = Integer.parseInt(args[0]);
         numServers = Integer.parseInt(args[1]);
         String filename = args[2];
+        /** List of server addresses in server:ip format */
         ArrayList<String> addresses = new ArrayList<String>();
-        for (int i = 3; i < args.length - 2; i++) {
+        for (int i = 3; i < args.length; i++) {
             addresses.add(args[i]);
         }
 
         /* Stand up all the servers in individual threads, keeping a reference
          * to only the first server (guaranteed to exist). */
+        /** Server initialized with inventoryfile, he synchronizes the other n-1
+         * servers. */
         Server initServer = null;
+        /** List of threads controlling n servers. */
         ArrayList<Thread> server_threads = new ArrayList<Thread>();
         for(int i = 1; i <= numServers; i++){
             Server s = new Server(i-1, addresses);
@@ -100,31 +110,44 @@ class Launcher {
  */
 public class Server implements Runnable, LamportsMutexAlgorithm {
 
+    /** Lock used to implement signals and awaiting. */
     private final Lock lock = new ReentrantLock();
+    /** Condition triggered when a new head appears at the tip of the msgq PriorityQueue. */
     private final Condition newHead = lock.newCondition();
+    /** Condition triggered when an ACK msg is received from another server. */
     private final Condition responseReceived = lock.newCondition();
 
     /* Internal state variables */
+    /** Nonce used to keep track of order id's. */
     private int order_nonce = 1;
+    /** Keeps track of inventory items. */
     private Map<String, Integer> inventory = null;
+    /** Keeps track of past sales. */
     private Map<Integer, String> ledger = null;
+    /** Keeps track of past orders for each user. */
     private Map<String, ArrayList<String>> user_orders = null;
 
+    /** The port used for this server's tcp communication. */
     private Integer port; //this is the port that the server "this" listens on
+    /** The address used by this server. */
     public String server_address;
+    /** The addresses used by the other servers mirroring this one. */
     private ArrayList<String> server_addresses = null;
+    /** The communication channels to each server in server_addresses. */
     private Map<String, TcpListener> server_list = null;
 
     /* Variables used for Lamport's MuTex Algorithm */
+    /** Timestamp used to keep track of Lamports Clock (used for Lamports Mutual
+     * Exclusion Algorithm). */
     private Timestamp ts;
+    /** Message queue. Used to implement Lamports Mutual Exclusion Algorithm. */
     PriorityQueue<Message> msgq = null;
 
     /* Temporary processing variables */
     private String[] command;
     private InetAddress address;
+    /** TcpSocket used for tcp communication by this server. */
     private Socket tcpsocket;
-    /*Used for futures*/
-    private static ExecutorService threadPool = Executors.newCachedThreadPool();
 
     public Server(int serverID, ArrayList<String> nodes){
         inventory = new ConcurrentHashMap<String, Integer>();
@@ -160,10 +183,13 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         }
     }
 
+    /** Update the local clock by incrementing it once. */
     public int recordEvent() {
         return recordEvent(new Timestamp());
     }
 
+    /** Update the local clock by taking the maximum of the local clock and the
+     * clock used by the server that sent this server a message. */
     private int recordEvent(Timestamp t) {
         ts.increment(); 
         ts = new Timestamp(Math.max(ts.get(), t.get()));
@@ -171,7 +197,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         /* room for expansion (saving global state) here */
     }
 
-    /* Use to initialize a live node with initial inventory */
+    /** Use to initialize a live node with initial inventory */
     public synchronized String add(String productname, String quantity){
         int intQuantity = Integer.parseInt(quantity);
         inventory.put(productname, intQuantity +
@@ -180,8 +206,10 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         return String.format("Added %s of %s", quantity, productname);
     }
 
-    /* Notify ALL servers in server_addresses of message msg (requesting CS). */
-    /* Note: this message only returns when all ACKs have been seen */
+    /** Notify all servers in server_list of msg.
+     *
+     * \warning This is a blocking method, returning only when all threads have
+     * acknowledged this request. */
     public void notifyServers(Message msg) {
     	lock.lock();
     	try{
@@ -199,7 +227,8 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     	}finally{lock.unlock();}
     }
 
-    /* Return true if 'this' is at the head of the priority queue msgq. */
+    /** Return true if 'this' server is at the head of the priority queue
+     * msgq. */
     public boolean isHead() {
         Message head = msgq.peek();
         /* Peek might return null */
@@ -210,7 +239,8 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         return false;
     }
 
-    /* Single entry and exit point for associated TcpListener. */
+    /** Enqueue a message on the msgq. This method is the single entry and exit
+     * point for associated TcpListener. */
     public String enqueue(Message msg) {
         recordEvent(msg.getTimestamp()); /* new event -- message channel is alive */
 
@@ -249,6 +279,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         return responseToClient;
     }
 
+    /** Request the critical section and alert all other servers. */
     public void requestCS() {
         recordEvent();          /* new event -- this thread ready for CS */
         Message msg = new Message(this, this.ts, MessageType.REQUEST);
@@ -257,6 +288,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         notifyServers(msg);
     }
 
+    /** Release the critical section and alert all other servers. */
     public void releaseCS() {
         recordEvent();          /* new event -- CS has ended */
         Message msg = new Message(this, this.ts, MessageType.RELEASE);
@@ -264,6 +296,7 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         notifyServers(msg);
     }
 
+    /** Apply a transactional change to our inventory. */
     public String delta(String dispatch, ArrayList<String> parameters){
         recordEvent();          /* new event -- CS has begun */
 
@@ -279,6 +312,9 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         return response;
     }
 
+    /** The Critical Section. This method acquires, executes and releases a
+     * critical section, invoking the delta function and modifying the store
+     * inventory. */
     public String CS(String dispatch, ArrayList<String> parameters) {
         requestCS();
         lock.lock();
