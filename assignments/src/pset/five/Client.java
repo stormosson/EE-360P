@@ -24,21 +24,30 @@ public class Client {
         int numAddresses;
         ArrayList<String> addresses = new ArrayList<String>();
 
-        if (!(args.length >= 3 && args.length <= 4)) {
+        if (!(args.length == 0 || args.length >= 3)) {
             String s = "";
             /* TODO: update to relevant help string */
-            s += ("ERROR: Provide 3 arguments\n");
-            s += ("\t(1) <hostAddress>: the address of the server\n");
-            s += ("\t(2) <tcpPort>: the port number for TCP connection\n");
-            s += ("\t(3) <udpPort>: the port number for UDP connection\n");
-            s += ("\t<4> <input>: plaintext file containing input commands\n");
+            s += ("ERROR: Provide at least 3 arguments:\n");
+            s += ("\t(1) <numServers>: the number of servers\n");
+            s += ("\t(2) <address>:<portNum> the address of the first server and the port number\n");
+            s += ("\t(3) <address>:<portNum> the address of the second server and the port number\n");
+            s += ("...\n");
+            s += ("\t(n) <address>:<portNum> the address of the nth server and the port number\n");
             System.out.println(s);
             System.exit(-1);
         }
-
-        numAddresses = Integer.parseInt(args[0]);
-        for(int i = 1; i <= numAddresses; i++){
-            addresses.add(args[i]);
+        
+        if(args.length != 0){
+	        numAddresses = Integer.parseInt(args[0]);
+	        for(int i = 1; i <= numAddresses; i++){
+	            addresses.add(args[i]);
+	        }
+        } else {
+        	Scanner setupScanner = new Scanner(System.in);
+        	numAddresses = Integer.parseInt(setupScanner.nextLine());
+        	for(int i = 0; i < numAddresses; i++){
+        		addresses.add(setupScanner.nextLine());
+        	}
         }
 
         Scanner sc = null;
