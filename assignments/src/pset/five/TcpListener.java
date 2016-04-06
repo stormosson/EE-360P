@@ -9,6 +9,18 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/** Reduce code duplication by providing a common library for internet address
+ * manipulation. */
+class InetManipulator {
+    public static int getPortFromAddress(String str) {
+        return Integer.parseInt(str.split(":")[1]);
+    }
+
+    public static String getHostFromAddress(String str) {
+        return str.split(":")[0];
+    }
+}
+
 
 /* TODO: rename this to something sensible; it sends messages too */
 /**
@@ -22,19 +34,12 @@ class TcpListener implements Runnable {
     ServerSocket ssocket;
     private final Integer BACKLOG = 100;
 
-    private static int getPortFromAddress(String str) {
-        return Integer.parseInt(str.split(":")[1]);
-    }
-
-    private static String getHostFromAddress(String str) {
-        return str.split(":")[0];
-    }
-
     /**
      * Spawn a TCP listener on specified port.
      */
     TcpListener(String address) {
-        this(getHostFromAddress(address), getPortFromAddress(address));
+        this(InetManipulator.getHostFromAddress(address), 
+             InetManipulator.getPortFromAddress(address));
     }
 
     /**
