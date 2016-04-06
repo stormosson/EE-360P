@@ -70,22 +70,14 @@ public class Client {
         return true;
     }
 
-    private static int getPortFromAddress(String str) {
-        return Integer.parseInt(str.split(":")[1]);
-    }
-
-    private static String getHostFromAddress(String str) {
-        return str.split(":")[0];
-    }
-
     /** Send a message to specified address and port via TCP.
      */
     public static String sendTcp(String message, ArrayList<String> addresses){
         int i = 0;
         Socket ssocket = new Socket();
         while(true){
-            String strAddress = getHostFromAddress(addresses.get(i));
-            int port = getPortFromAddress(addresses.get(i));
+            String strAddress = InetManipulator.getHostFromAddress(addresses.get(i));
+            int port = InetManipulator.getPortFromAddress(addresses.get(i));
             try {
                 //TODO: convert to nonblocking socket channel
                 ssocket.connect(new InetSocketAddress(strAddress,port), TIMEOUT);
