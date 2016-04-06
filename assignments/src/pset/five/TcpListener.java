@@ -65,7 +65,13 @@ class TcpListener implements Runnable {
         }
     }
 
+    /** Send a message to this TcpListener's corresponding Server. */
     /* TODO: implement */
+    /* TODO: I have an inkling that this is going to need to dispatch the
+     * command contained inside msg to a Handler, such that this thread doesn't
+     * block or not all servers will be notified in parallel by
+     * notifyServers. With the current setup we're getting serial
+     * notifications, sounds ripe for a deadlock */
     public void sendMessage(Message msg) {
         //must use enqueue
     	server.enqueue(msg);
