@@ -140,6 +140,8 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
     private Integer port; //this is the port that the server "this" listens on
     /** The address used by this server. */
     public String server_address;
+    /** The other server nodes acting 'immortally'. */
+    public ArrayList<String> server_addresses = null;
     /** The communication channels to each server. */
     private Map<String, TcpListener> server_list = null;
 
