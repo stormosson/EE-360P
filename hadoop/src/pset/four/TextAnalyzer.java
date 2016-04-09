@@ -63,7 +63,6 @@ public class TextAnalyzer extends Configured implements Tool {
         Configuration conf = this.getConf();
 
         // Create job
-        /* TODO: faggot didn't put a todo what was he thinking */
         Job job = new Job(conf, "EID1_EID2"); // Replace with your EIDs
         job.setJarByClass(TextAnalyzer.class);
 
