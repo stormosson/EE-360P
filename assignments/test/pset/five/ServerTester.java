@@ -45,8 +45,6 @@ public class ServerTester {
             client0args[i] = scan.next().trim();
         }
 
-        /* TODO: spawn launchers so they run concurrently. By launchers I really
-         * mean clients but we should also examine this launcher thing too */
         /* Initialize servers */
         /* Launcher.main(server1args); */
         /* Launcher.main(server2args); */

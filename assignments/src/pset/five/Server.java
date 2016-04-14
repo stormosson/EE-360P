@@ -300,7 +300,6 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
              * respond. He'll wait for all responses before releasing the CS. */
             delta(msg.getServerCommand().getCommand(), 
                   msg.getServerCommand().getParameters());
-            /* TODO: question: do we need to differentiate the ACK and the synchronization ACK? */
             reply = new Message(this, msg.getServerCommand(), ts, MessageType.ACK);
             requesting_server = msg.getSender().server_address;
             channel = server_list.get(requesting_server);
@@ -340,7 +339,6 @@ public class Server implements Runnable, LamportsMutexAlgorithm {
         return response;
     }
 
-    /* TODO: verify this method, drunk coding */
     /** Send a signal to the n-1 other servers after each local transaction,
      * keeping the entire fleet up to date and immortal. */
     public void synchronizeServers(ServerCommand srv_cmd) {

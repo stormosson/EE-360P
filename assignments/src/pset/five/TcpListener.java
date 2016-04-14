@@ -22,7 +22,6 @@ class InetManipulator {
 }
 
 
-/* TODO: rename this to something sensible; it sends messages too */
 /**
  * Listener class to accept requests over a TCP connection.
  */
